@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Trash2 } from "lucide-react";
+import { Trash2, GripVertical } from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable"; 
 import { CSS } from "@dnd-kit/utilities"; 
 
@@ -49,21 +49,7 @@ const TaskCard = ({ task, deleteTask, updateTask }) => {
       <div
         ref={setNodeRef}
         style={style}
-        className="
-        opacity-30
-        bg-neutral-800 
-        p-2.5 
-        h-[100px] 
-        min-h-[100px] 
-        items-center 
-        flex 
-        text-left 
-        rounded-xl 
-        border-2 
-        border-rose-500  
-        cursor-grab 
-        relative
-      "
+        className="opacity-40 bg-gradient-to-br from-neutral-800 to-neutral-900 p-2.5 h-[100px] min-h-[100px] rounded-xl border-2 border-dashed border-rose-500/60"
       />
     );
   }
@@ -76,28 +62,11 @@ const TaskCard = ({ task, deleteTask, updateTask }) => {
         style={style}
         {...attributes}
         {...listeners}
-        className="
-        bg-neutral-900
-        p-2.5
-        h-[100px]
-        min-h-[100px]
-        items-center
-        flex
-        text-left
-        rounded-xl
-        hover:ring-2
-        hover:ring-inset
-        hover:ring-rose-500
-        cursor-grab
-        relative
-      "
+        className="bg-gradient-to-br from-neutral-800/80 to-neutral-900/80 backdrop-blur-sm p-2.5 h-[100px] min-h-[100px] rounded-xl border border-rose-500/30 shadow-lg shadow-rose-500/10 hover:shadow-rose-500/20 transition-all duration-300"
       >
         {/*  Görev içeriği için düzenlenebilir alan */}
         <textarea
-          className="
-            h-[90%]
-            w-full resize-none border-none rounded bg-transparent text-white focus:outline-none
-          "
+          className="h-[90%] w-full resize-none border-none rounded bg-transparent text-white focus:outline-none placeholder:text-neutral-500"
           value={task.content}
           autoFocus
           placeholder="Görev içeriği..."
@@ -121,30 +90,22 @@ const TaskCard = ({ task, deleteTask, updateTask }) => {
       {...attributes}
       {...listeners}
       onClick={toggleEditMode}
-      className="
-        bg-neutral-900
-        p-2.5
-        h-[100px]
-        min-h-[100px]
-        items-center
-        flex
-        text-left
-        rounded-xl
-        hover:ring-2
-        hover:ring-inset
-        hover:ring-rose-500
-        cursor-grab
-        relative
-        task
-      "
+      className="group bg-gradient-to-br from-neutral-800/90 to-neutral-900/90 backdrop-blur-sm pl-0.5 p-2.5 h-[100px] min-h-[100px] rounded-xl border border-neutral-700/50 shadow-lg hover:shadow-xl hover:shadow-rose-500/10 hover:border-rose-500/40 transition-all duration-200 cursor-grab active:cursor-grabbing hover:scale-[1.04] relative overflow-hidden task"
       // Fare üzerine gelme olayları
       onMouseEnter={() => setMouseIsOver(true)}
       onMouseLeave={() => setMouseIsOver(false)}
     >
-     
-      <p className="my-auto h-[90%] w-full overflow-y-auto overflow-x-hidden whitespace-pre-wrap break-words">
-        {task.content}
-      </p>
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-rose-500/0 via-rose-500/50 to-rose-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+      
+      <div className="flex items-start gap-2">
+        <div className="opacity-0 group-hover:opacity-60 transition-opacity duration-200 mt-1">
+          <GripVertical size={14} className="text-neutral-400" />
+        </div>
+        
+        <p className="flex-1 text-neutral-200 text-sm whitespace-pre-wrap break-words leading-relaxed my-auto h-[90%] overflow-y-auto overflow-x-hidden">
+          {task.content}
+        </p>
+      </div>
 
       {/*  Silme butonunu sadece fare üzerine gelince göster */}
       {mouseIsOver && (
@@ -153,20 +114,9 @@ const TaskCard = ({ task, deleteTask, updateTask }) => {
             e.stopPropagation(); 
             deleteTask(task.id);
           }}
-          className="
-            stroke-white
-            absolute
-            right-4
-            top-1/2
-            -translate-y-1/2
-            bg-neutral-900
-            p-2
-            rounded
-            opacity-60
-            hover:opacity-100
-          "
+          className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-neutral-800/80 backdrop-blur-sm border border-neutral-700/50 text-neutral-400 hover:text-rose-400 hover:bg-rose-500/10 hover:border-rose-500/30 transition-all duration-200 opacity-0 group-hover:opacity-100"
         >
-          <Trash2 />
+          <Trash2 size={14} />
         </button>
       )}
     </div>

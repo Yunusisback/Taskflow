@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef } from "react";
 import ColumnContainer from "./ColumnContainer";
-import { Plus } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   DndContext,
   DragOverlay,
@@ -14,6 +14,8 @@ import TaskCard from "./TaskCard";
 
 // Kanban Tahtası Bileşeni
 const KanbanBoard = () => {
+  const scrollContainerRef = useRef(null);
+  
   const [columns, setColumns] = useState([
     { id: "todo", title: "Yapılacaklar" },
     { id: "doing", title: "İşleniyor" },
@@ -87,8 +89,24 @@ const KanbanBoard = () => {
     return Math.floor(Math.random() * 10001).toString();
   }
 
+  const scrollLeft = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: -400, behavior: 'smooth' });
+    }
+  };
+
+  const scrollRight = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: 400, behavior: 'smooth' });
+    }
+  };
+
   // Sürükleme başladığında aktif elemanı ayarla
   function onDragStart(event) {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.style.scrollBehavior = 'auto';
+    }
+    
     if (event.active.data.current?.type === "Column") {
       setActiveColumn(event.active.data.current.column);
       return;
@@ -140,6 +158,10 @@ const KanbanBoard = () => {
 
   // Sürükleme bittiğinde aktif elemanı sıfırla ve sütunları yeniden sırala
   function onDragEnd(event) {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.style.scrollBehavior = 'smooth';
+    }
+    
     setActiveColumn(null);
     setActiveTask(null);
 
@@ -165,27 +187,28 @@ const KanbanBoard = () => {
   }
 
   return (
-    <div
-      className="
-        m-auto
-        flex
-        min-h-screen
-        w-full
-        items-center
-        justify-start
-        overflow-x-auto
-        overflow-y-hidden
-        px-[40px]
-        bg-neutral-950
-        text-white
-        font-sans
-    "
-    >
-      {/* Dekoratif Arka Plan Deseni (Grid) */}
-      <div className="fixed inset-0 z-0 h-full w-full bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+    <div className="m-auto flex min-h-screen w-full items-center justify-start overflow-hidden px-[40px] bg-neutral-950 text-white font-sans relative">
+      <div className="fixed inset-0 z-0 h-full w-full bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-rose-900/20 via-neutral-950 to-neutral-950"></div>
+      <div className="fixed inset-0 z-0 h-full w-full bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:48px_48px]"></div>
+      
+      {/* Sol Ok Butonu */}
+      <button
+        onClick={scrollLeft}
+        className="fixed left-4 z-20 p-3 rounded-full bg-gradient-to-br from-neutral-800/90 to-neutral-900/90 backdrop-blur-xl border border-neutral-700/50 text-neutral-400 hover:text-rose-400 hover:border-rose-500/50 hover:bg-rose-500/10 transition-all duration-300 shadow-2xl hover:scale-110 active:scale-95 active:shadow-lg cursor-pointer"
+      >
+        <ChevronLeft size={24} />
+      </button>
+
+      {/* Sağ Ok Butonu */}
+      <button
+        onClick={scrollRight}
+        className="fixed right-4 z-20 p-3 rounded-full bg-gradient-to-br from-neutral-800/90 to-neutral-900/90 backdrop-blur-xl border border-neutral-700/50 text-neutral-400 hover:text-rose-400 hover:border-rose-500/50 hover:bg-rose-500/10 transition-all duration-300 shadow-2xl hover:scale-110 active:scale-95 active:shadow-lg cursor-pointer"
+      >
+        <ChevronRight size={24} />
+      </button>
       
       {/* Ana İçerik */}
-      <div className="z-10 flex gap-6">
+      <div ref={scrollContainerRef} className="z-10 flex gap-6 py-12 overflow-x-auto overflow-y-hidden w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] scroll-smooth will-change-scroll">
         
         {/* Dndcontext ile sürükle bırak işlevselliğini sağla */}
         <DndContext
@@ -212,31 +235,10 @@ const KanbanBoard = () => {
 
             <button
               onClick={createNewColumn}
-              className="
-                h-[60px]
-                w-[350px]
-                min-w-[350px]
-                cursor-pointer
-                rounded-xl
-                bg-neutral-900/50
-                backdrop-blur-sm
-                border
-                border-neutral-800
-                p-4
-                flex
-                gap-2
-                items-center
-                justify-center
-                text-neutral-400
-                hover:text-rose-500
-                hover:border-rose-500/50
-                hover:bg-neutral-900
-                transition-all
-                duration-200
-                "
+              className="h-[70px] w-[380px] min-w-[380px] cursor-pointer rounded-3xl bg-gradient-to-br from-neutral-800/30 to-neutral-900/30 backdrop-blur-xl border-2 border-dashed border-neutral-700/50 p-4 flex gap-3 items-center justify-center text-neutral-500 hover:text-rose-400 hover:border-rose-500/50 hover:bg-rose-500/5 transition-all duration-300 group"
             >
-              <Plus size={24} />
-              <span className="font-semibold">Sütun Ekle</span>
+              <Plus size={24} className="group-hover:rotate-90 transition-transform duration-300" />
+              <span className="font-semibold text-lg">Sütun Ekle</span>
             </button>
           </div>
 

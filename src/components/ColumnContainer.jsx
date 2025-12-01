@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import TaskCard from "./TaskCard";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { Trash2, Plus } from "lucide-react";
+import { Trash2, Plus, GripVertical } from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
@@ -50,18 +50,7 @@ const ColumnContainer = ({
       <div
         ref={setNodeRef}
         style={style}
-        className="
-        bg-neutral-800
-        opacity-40
-        border-2
-        border-rose-500
-        w-[350px]
-        h-[500px]
-        max-h-[500px]
-        rounded-md
-        flex
-        flex-col
-        "
+        className="bg-neutral-800/30 backdrop-blur-sm opacity-40 border-2 border-dashed border-rose-500/60 w-[380px] h-[600px] rounded-3xl shadow-2xl"
       ></div>
     );
   }
@@ -72,16 +61,7 @@ const ColumnContainer = ({
     <div
       ref={setNodeRef}
       style={style}
-      className="
-        bg-neutral-800
-        w-[350px]
-        h-[500px]
-        max-h-[500px]
-        rounded-md
-        flex
-        flex-col
-        shrink-0 
-      "
+      className="bg-gradient-to-b from-neutral-800/50 to-neutral-900/50 backdrop-blur-xl w-[320px] h-[550px] rounded-3xl flex flex-col border border-neutral-700/30 shadow-2xl hover:shadow-rose-500/5 transition-all duration-300 shrink-0"
     >
      
       <div
@@ -90,56 +70,31 @@ const ColumnContainer = ({
         onClick={() => {
          
         }}
-        className="
-            bg-neutral-900
-            text-md
-            h-[60px]
-            cursor-grab
-            rounded-md
-            rounded-b-none
-            p-3
-            font-bold
-            border-neutral-800
-            border-4
-            flex
-            items-center
-            justify-between
-        "
+        className="bg-gradient-to-br from-neutral-800/80 to-neutral-900/80 backdrop-blur-sm h-[70px] cursor-grab active:cursor-grabbing rounded-3xl rounded-b-2xl p-4 border-b border-neutral-700/50 flex items-center justify-between group hover:border-rose-500/30 transition-all duration-300"
       >
-        <div className="flex gap-2">
+        <div className="flex gap-3 items-center">
          
-          <div className="
-            flex
-            justify-center
-            items-center
-            bg-neutral-900
-            px-2
-            py-1
-            text-sm
-            rounded-full
-          ">
+          <div className="opacity-0 group-hover:opacity-60 transition-opacity duration-200">
+            <GripVertical size={20} className="text-neutral-400" />
+          </div>
+          
+          <div className="flex justify-center items-center bg-gradient-to-br from-rose-500/20 to-rose-600/20 backdrop-blur-sm px-3 py-1.5 text-sm rounded-full border border-rose-500/30 text-rose-300 font-semibold shadow-lg shadow-rose-500/10">
             {tasks.length}
           </div>
-          {column.title}
+          
+          <span className="font-bold text-lg text-neutral-100">{column.title}</span>
         </div>
         
      
         <button
           onClick={() => deleteColumn(column.id)}
-          className="
-            stroke-gray-500
-            hover:stroke-white
-            hover:bg-neutral-800
-            rounded
-            px-1
-            py-2
-            "
+          className="p-2 rounded-xl text-neutral-500 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/30 transition-all duration-200"
         >
-            <Trash2 size={20} />
+          <Trash2 size={18} />
         </button>
       </div>
 
-      <div className="flex flex-grow flex-col gap-4 p-2 overflow-x-hidden overflow-y-auto">
+      <div className="flex flex-grow flex-col gap-3 p-4 overflow-x-hidden overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
 
          {/*  Görevleri sırala ve göster */}
 
@@ -156,12 +111,13 @@ const ColumnContainer = ({
       </div>
 
       {/*  Görev ekleme butonu */}
-      <div className="p-2 border-t border-neutral-900">
+      <div className="p-4 border-t border-neutral-700/30">
         <button
           onClick={() => createTask(column.id)}
-          className="flex gap-2 items-center border-neutral-800 border-2 rounded-md p-4 w-full hover:bg-neutral-900 hover:text-rose-500 transition-colors"
+          className="flex gap-2 items-center justify-center w-full px-4 py-3 rounded-2xl bg-gradient-to-r from-neutral-800/50 to-neutral-900/50 backdrop-blur-sm border border-neutral-700/50 text-neutral-400 hover:text-rose-400 hover:border-rose-500/40 hover:bg-rose-500/5 transition-all duration-300 font-medium group"
         >
-          <Plus /> Görev Ekle
+          <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300" />
+          <span>Görev Ekle</span>
         </button>
       </div>
     </div>

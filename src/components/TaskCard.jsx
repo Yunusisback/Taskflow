@@ -49,7 +49,7 @@ const TaskCard = ({ task, deleteTask, updateTask }) => {
       <div
         ref={setNodeRef}
         style={style}
-        className="opacity-40 bg-gradient-to-br from-neutral-800 to-neutral-900 p-2.5 h-[100px] min-h-[100px] rounded-xl border-2 border-dashed border-rose-500/60"
+        className="opacity-30 bg-neutral-800 p-2.5 h-[100px] min-h-[100px] rounded-lg border border-dashed border-rose-500"
       />
     );
   }
@@ -62,18 +62,19 @@ const TaskCard = ({ task, deleteTask, updateTask }) => {
         style={style}
         {...attributes}
         {...listeners}
-        className="bg-gradient-to-br from-neutral-800/80 to-neutral-900/80 backdrop-blur-sm p-2.5 h-[100px] min-h-[100px] rounded-xl border border-rose-500/30 shadow-lg shadow-rose-500/10 hover:shadow-rose-500/20 transition-all duration-300"
+        className="bg-neutral-800 p-3 h-[100px] min-h-[100px] rounded-lg border border-rose-500/50 shadow-lg"
       >
-        {/*  Görev içeriği için düzenlenebilir alan */}
+        {/* Görev içeriği için düzenlenebilir alan */}
         <textarea
-          className="h-[90%] w-full resize-none border-none rounded bg-transparent text-white focus:outline-none placeholder:text-neutral-500"
+          className="h-full w-full resize-none border-none rounded bg-transparent text-white focus:outline-none placeholder:text-neutral-500 text-sm leading-relaxed font-normal [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
           value={task.content}
           autoFocus
           placeholder="Görev içeriği..."
           onBlur={toggleEditMode}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && e.shiftKey) {
-              toggleEditMode();
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault(); 
+              toggleEditMode();   
             }
           }}
           onChange={(e) => updateTask(task.id, e.target.value)}
@@ -90,31 +91,32 @@ const TaskCard = ({ task, deleteTask, updateTask }) => {
       {...attributes}
       {...listeners}
       onClick={toggleEditMode}
-      className="group bg-gradient-to-br from-neutral-800/90 to-neutral-900/90 backdrop-blur-sm pl-0.5 p-2.5 h-[100px] min-h-[100px] rounded-xl border border-neutral-700/50 shadow-lg hover:shadow-xl hover:shadow-rose-500/10 hover:border-rose-500/40 transition-all duration-200 cursor-grab active:cursor-grabbing hover:scale-[1.04] relative overflow-hidden task"
+      className="group bg-neutral-800 hover:bg-neutral-800 backdrop-blur-sm p-3 min-h-[80px] rounded-lg border border-transparent hover:border-neutral-700/50 shadow-sm hover:shadow-md transition-all duration-200 cursor-grab active:cursor-grabbing relative overflow-hidden task"
       // Fare üzerine gelme olayları
       onMouseEnter={() => setMouseIsOver(true)}
       onMouseLeave={() => setMouseIsOver(false)}
     >
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-rose-500/0 via-rose-500/50 to-rose-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        {/*  Sürükleme ikonu ve görev içeriği */}
       
-      <div className="flex items-start gap-2">
-        <div className="opacity-0 group-hover:opacity-60 transition-opacity duration-200 mt-1">
+      <div className="flex items-start gap-2 h-full">
+        <div className="mt-1 opacity-0 group-hover:opacity-40 transition-opacity duration-200">
           <GripVertical size={14} className="text-neutral-400" />
         </div>
         
-        <p className="flex-1 text-neutral-200 text-sm whitespace-pre-wrap break-words leading-relaxed my-auto h-[90%] overflow-y-auto overflow-x-hidden">
+          {/* Görev içeriği */}
+        <p className="flex-1 text-neutral-300 text-sm whitespace-pre-wrap break-words leading-relaxed my-auto h-[90%] overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {task.content}
         </p>
       </div>
 
-      {/*  Silme butonunu sadece fare üzerine gelince göster */}
+      {/* Silme butonunu sadece fare üzerine gelince göster */}
       {mouseIsOver && (
         <button
           onClick={(e) => {
             e.stopPropagation(); 
             deleteTask(task.id);
           }}
-          className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-neutral-800/80 backdrop-blur-sm border border-neutral-700/50 text-neutral-400 hover:text-rose-400 hover:bg-rose-500/10 hover:border-rose-500/30 transition-all duration-200 opacity-0 group-hover:opacity-100"
+          className="absolute right-2 top-2 p-1.5 rounded-md bg-neutral-900/80 text-neutral-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all duration-200 opacity-0 group-hover:opacity-100"
         >
           <Trash2 size={14} />
         </button>

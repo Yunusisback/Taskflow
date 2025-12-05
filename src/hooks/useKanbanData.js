@@ -17,7 +17,21 @@ export const useKanbanData = () => {
 // Sütunlar, görevler ve çöp kutusu için durum yönetimi
   const [columns, setColumns] = useState(() => {
     const saved = localStorage.getItem("kanban_columns");
-    return saved ? JSON.parse(saved) : defaultColumns;
+    const parsedData = saved ? JSON.parse(saved) : defaultColumns;
+
+    //  Eğer hafızada temel sütunlar (todo, doing, done) yoksa  onları geri ekle
+    const hasTodo = parsedData.some(col => col.id === "todo");
+    const hasDoing = parsedData.some(col => col.id === "doing");
+    const hasDone = parsedData.some(col => col.id === "done");
+
+    if (!hasTodo || !hasDoing || !hasDone) {
+
+      // Eksik olanları varsayılanlardan al kullanıcının eklediği diğer sütunları koru
+      const userCustomColumns = parsedData.filter(col => !["todo", "doing", "done"].includes(col.id));
+      return [...defaultColumns, ...userCustomColumns];
+    }
+
+    return parsedData;
   });
 // Görevler
   const [tasks, setTasks] = useState(() => {
@@ -50,6 +64,9 @@ export const useKanbanData = () => {
   };
 // Sütun silme
   const deleteColumn = (id) => {
+    // Bu ID lere sahip sütunların silinmesini engelliyoruz
+    if (id === "todo" || id === "doing" || id === "done") return;
+    
     const column = columns.find(c => c.id === id);
     const columnTasks = tasks.filter(t => t.columnId === id);
     const trashItem = { ...column, type: "column", deletedTasks: columnTasks, deletedAt: Date.now() };

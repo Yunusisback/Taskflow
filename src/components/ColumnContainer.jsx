@@ -23,15 +23,15 @@ const ColumnContainer = ({
 
   // Sütun kimliğine (id) göre renk teması belirleme
   const colorTheme = useMemo(() => {
-     if (column.id === 'todo') return 'blue';   
-     if (column.id === 'doing') return 'amber';  
-     if (column.id === 'done') return 'emerald'; 
-     return 'stone'; 
+      if (column.id === 'todo') return 'blue';    
+      if (column.id === 'doing') return 'amber';   
+      if (column.id === 'done') return 'emerald'; 
+      return 'stone'; 
   }, [column.id]);
 
   const variants = {
     stone: {
-  
+   
       bg: "bg-stone-50 dark:bg-neutral-900/40",
       
       headerBg: "bg-stone-200/80 dark:bg-neutral-800",
@@ -66,7 +66,7 @@ const ColumnContainer = ({
     },
     emerald: {
       bg: "bg-stone-50 dark:bg-neutral-900/40",
-     
+      
       headerBg: "bg-emerald-300 dark:bg-emerald-900/60",
       border: "border-emerald-200 dark:border-emerald-900/30",
       hoverBorder: "hover:border-emerald-400 dark:hover:border-emerald-700",
@@ -159,18 +159,23 @@ const ColumnContainer = ({
         </div>
 
         <div className="flex gap-1 opacity-0 group-hover/header:opacity-100 transition-opacity">
+          {/* Düzenle Butonu */}
           <button
             onClick={() => setEditMode(true)}
-            className={cn("p-2 rounded-xl text-stone-600 dark:text-neutral-300 transition-all", theme.buttonHover)}
+            className={cn("p-2 rounded-xl text-stone-600 dark:text-neutral-300 transition-all cursor-pointer hover:scale-110 active:scale-95", theme.buttonHover)}
           >
             <Pencil size={16} />
           </button>
-          <button
-            onClick={() => deleteColumn(column.id)}
-            className="p-2 rounded-xl text-stone-600 dark:text-neutral-300 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/30 transition-all"
-          >
-            <Trash2 size={16} />
-          </button>
+          
+          {/* Silme Butonu  */}
+          {column.id !== "todo" && column.id !== "doing" && column.id !== "done" && (
+            <button
+              onClick={() => deleteColumn(column.id)}
+              className="p-2 rounded-xl text-stone-600 dark:text-neutral-300 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/30 transition-all cursor-pointer hover:scale-110 active:scale-95"
+            >
+              <Trash2 size={16} />
+            </button>
+          )}
         </div>
       </div>
     
@@ -205,7 +210,7 @@ const ColumnContainer = ({
         <button
           onClick={() => createTask(column.id)}
           className={cn(
-            "flex w-full items-center gap-2.5 rounded-xl px-3 py-3 transition-all font-medium text-sm group/add",
+            "flex w-full items-center gap-2.5 rounded-xl px-3 py-3 transition-all font-medium text-sm group/add cursor-pointer active:scale-95",
             "text-stone-500 dark:text-neutral-500 hover:text-stone-800 dark:hover:text-neutral-300",
             theme.buttonHover
           )}

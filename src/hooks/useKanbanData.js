@@ -19,7 +19,7 @@ export const useKanbanData = () => {
     const saved = localStorage.getItem("kanban_columns");
     const parsedData = saved ? JSON.parse(saved) : defaultColumns;
 
-    //  Eğer hafızada temel sütunlar (todo, doing, done) yoksa  onları geri ekle
+    //  Eğer hafızada temel sütunlar (todo doing  done) yoksa  onları geri ekle
     const hasTodo = parsedData.some(col => col.id === "todo");
     const hasDoing = parsedData.some(col => col.id === "doing");
     const hasDone = parsedData.some(col => col.id === "done");

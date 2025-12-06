@@ -24,7 +24,7 @@ const Trash = ({ isOpen, onClose, trashItems, restoreItem, deletePermanently }) 
       <div 
       
         className={cn(
-          "relative w-full max-w-md h-full bg-white dark:bg-neutral-900 shadow-2xl border-l border-stone-200 dark:border-neutral-800 flex flex-col transform transition-transform duration-500 cubic-bezier(0.32, 0.72, 0, 1)", // Özel yumuşak animasyon eğrisi
+          "relative w-full max-w-md h-full bg-white dark:bg-neutral-900 shadow-2xl border-l border-stone-200 dark:border-neutral-800 flex flex-col transform transition-transform duration-500 cubic-bezier(0.32, 0.72, 0, 1)", 
           isOpen ? "translate-x-0 shadow-2xl" : "translate-x-full shadow-none"
         )}
       >
@@ -33,18 +33,18 @@ const Trash = ({ isOpen, onClose, trashItems, restoreItem, deletePermanently }) 
         <div className="p-6 border-b border-stone-100 dark:border-neutral-800 flex items-center justify-between bg-stone-50/50 dark:bg-neutral-900">
           <div className="flex items-center gap-2 text-rose-500">
             <Trash2 size={24} />
-            <h2 className="text-xl font-bold text-stone-800 dark:text-neutral-100">Çöp Kutusu</h2>
+            <h2 className="text-xl font-bold text-stone-800 dark:text-neutral-100 select-none">Çöp Kutusu</h2>
           </div>
           <button 
             onClick={onClose}
-            className="p-2 hover:bg-stone-200 dark:hover:bg-neutral-800 rounded-lg text-stone-400 dark:text-neutral-500 hover:text-stone-700 dark:hover:text-neutral-200 transition-colors"
+            className="p-2 hover:bg-stone-200 dark:hover:bg-neutral-800 rounded-lg text-stone-400 dark:text-neutral-500 hover:text-stone-700 dark:hover:text-neutral-200 transition-colors cursor-pointer"
           >
             <X size={24} />
           </button>
         </div>
 
         {/* Liste Kısmı */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar ">
           {trashItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-stone-400 dark:text-neutral-600 gap-4">
               <Trash2 size={48} className="opacity-20" />
@@ -79,14 +79,14 @@ const Trash = ({ isOpen, onClose, trashItems, restoreItem, deletePermanently }) 
                     <button 
                       onClick={() => restoreItem(item)}
                       title="Geri Yükle"
-                      className="p-2 rounded-lg bg-stone-100 dark:bg-neutral-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 text-stone-500 dark:text-neutral-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+                      className="p-2 rounded-lg bg-stone-100 dark:bg-neutral-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 text-stone-500 dark:text-neutral-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer"
                     >
                       <RotateCcw size={16} />
                     </button>
                     <button 
                       onClick={() => deletePermanently(item.deletedAt)}
                       title="Kalıcı Olarak Sil"
-                      className="p-2 rounded-lg bg-stone-100 dark:bg-neutral-700 hover:bg-rose-100 dark:hover:bg-rose-900/30 text-stone-500 dark:text-neutral-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
+                      className="p-2 rounded-lg bg-stone-100 dark:bg-neutral-700 hover:bg-rose-100 dark:hover:bg-rose-900/30 text-stone-500 dark:text-neutral-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer"
                     >
                       <Trash2 size={16} />
                     </button>
@@ -95,12 +95,7 @@ const Trash = ({ isOpen, onClose, trashItems, restoreItem, deletePermanently }) 
               </div>
             ))
           )}
-        </div>
-
-        {/* footer */}
-        <div className="p-4 border-t border-stone-100 dark:border-neutral-800 bg-stone-50 dark:bg-neutral-900 text-center text-xs text-stone-400 dark:text-neutral-500">
-          Otomatik silme kapalı
-        </div>
+        </div>   
       </div>
     </div>
   );

@@ -8,6 +8,7 @@ import {
   useSensor,
   useSensors,
   closestCorners,
+  MeasuringStrategy  
 } from "@dnd-kit/core";
 import { SortableContext, arrayMove } from "@dnd-kit/sortable";
 import { createPortal } from "react-dom";
@@ -21,6 +22,7 @@ import { useKanbanData } from "../hooks/useKanbanData";
 const KanbanBoard = ({ darkMode, toggleTheme }) => {
   const scrollRef = useRef(null);
 
+  
   const {
     columns,
     setColumns,
@@ -126,6 +128,11 @@ const KanbanBoard = ({ darkMode, toggleTheme }) => {
       onDragStart={onDragStart} 
       onDragOver={onDragOver} 
       onDragEnd={onDragEnd}
+      measuring={{
+        droppable: {
+          strategy: MeasuringStrategy.Always,
+        },
+      }}
     >
       <div className="min-h-screen bg-stone-50 dark:bg-neutral-950 text-stone-800 dark:text-neutral-100 transition-colors duration-300">
         
@@ -198,7 +205,8 @@ const KanbanBoard = ({ darkMode, toggleTheme }) => {
             <ChevronRight size={28} strokeWidth={1.5} />
         </button>
 
-        <div ref={scrollRef} className="flex h-screen gap-8 overflow-x-auto px-12 pt-24 pb-8 scroll-smooth [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:bg-stone-300 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-700 [&::-webkit-scrollbar-track]:bg-transparent">
+ 
+        <div ref={scrollRef} className="flex h-screen gap-8 overflow-x-auto px-12 pt-24 pb-8 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:bg-stone-300 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-700 [&::-webkit-scrollbar-track]:bg-transparent">
           <SortableContext items={columnsId}>
             {columns.map(col => (
               <ColumnContainer
@@ -226,11 +234,18 @@ const KanbanBoard = ({ darkMode, toggleTheme }) => {
         </div>
           
         {createPortal(
-         
+          
           <div className={darkMode ? "dark" : ""}> 
             <DragOverlay dropAnimation={null}>
               {activeCol && <ColumnContainer column={activeCol} tasks={tasks.filter(t => t.columnId === activeCol.id)} createTask={()=>{}} updateColumn={()=>{}} deleteColumn={()=>{}} deleteTask={()=>{}} updateTask={()=>{}} />}
-              {activeTask && <TaskCard task={activeTask} deleteTask={()=>{}} updateTask={()=>{}} />}
+              {activeTask && (
+                <TaskCard 
+                  task={activeTask} 
+                  isOverlay={true}
+                  deleteTask={()=>{}} 
+                  updateTask={()=>{}} 
+                />
+              )}
             </DragOverlay>
           </div>,
           document.body

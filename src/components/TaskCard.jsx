@@ -1,20 +1,19 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, memo } from "react"; 
 import { GripVertical } from "lucide-react"; 
 import { useSortable } from "@dnd-kit/sortable"; 
 import { CSS } from "@dnd-kit/utilities"; 
 import { cn } from "../lib/utils"; 
 
-const TaskCard = ({ task, columnTheme,updateTask }) => {
+const TaskCard = ({ task, columnTheme, updateTask, isOverlay }) => {
 
   const [mouseIsOver, setMouseIsOver] = useState(false);
   const [editMode, setEditMode] = useState(false);
 
-// Sütun temasına göre renk ayarları
+  // Sütun temasına göre renk ayarları
   const themeColors = useMemo(() => {
     switch (columnTheme) {
       case 'blue':
         return {
-         
           border: 'border-stone-200 dark:border-neutral-700',
           hoverBorder: 'hover:border-blue-400 dark:hover:border-blue-500',
           editBorder: 'border-blue-400 dark:border-blue-600',
@@ -22,7 +21,6 @@ const TaskCard = ({ task, columnTheme,updateTask }) => {
         };
       case 'amber':
         return {
-       
           border: 'border-stone-200 dark:border-neutral-700',
           hoverBorder: 'hover:border-amber-400 dark:hover:border-amber-500',
           editBorder: 'border-amber-400 dark:border-amber-600',
@@ -30,7 +28,6 @@ const TaskCard = ({ task, columnTheme,updateTask }) => {
         };
       case 'emerald':
         return {
-      
           border: 'border-stone-200 dark:border-neutral-700',
           hoverBorder: 'hover:border-emerald-400 dark:hover:border-emerald-500',
           editBorder: 'border-emerald-400 dark:border-emerald-600',
@@ -47,7 +44,7 @@ const TaskCard = ({ task, columnTheme,updateTask }) => {
     }
   }, [columnTheme]);
 
-// dnd-kit Hooku 
+  // dnd-kit Hooku 
   const {
     setNodeRef,  
     attributes,  
@@ -74,8 +71,8 @@ const TaskCard = ({ task, columnTheme,updateTask }) => {
     setMouseIsOver(false);
   };
 
-// Sürüklenirken arkada kalan boşluk 
-  if (isDragging) {
+  // Sürüklenirken arkada kalan boşluk 
+  if (isDragging && !isOverlay) {
     return (
       <div
         ref={setNodeRef}
@@ -87,8 +84,7 @@ const TaskCard = ({ task, columnTheme,updateTask }) => {
       />
     );
   }
-
-// Düzenleme modundayken textarea göster
+  // Düzenleme modundayken textarea göster
   if (editMode) {
     return (
       <div
@@ -120,25 +116,30 @@ const TaskCard = ({ task, columnTheme,updateTask }) => {
     );
   }
 
-// Normal modda görev kartını göster
+  // Normal modda görev kartını göster
   return (
     <div
       ref={setNodeRef}
-      style={style}
+      style={isOverlay ? {} : style}
       {...attributes}
       {...listeners}
       onClick={toggleEditMode}
       className={cn(
-        "group bg-white dark:bg-neutral-800 hover:bg-white/80 dark:hover:bg-neutral-800/80 p-3 min-h-[80px] rounded-lg border shadow-sm hover:shadow-md transition-all duration-200 cursor-grab  active:cursor-grabbing relative overflow-hidden task ",
+        "group bg-white dark:bg-neutral-800 hover:bg-white/80 dark:hover:bg-neutral-800/80 p-3 min-h-[80px] rounded-lg border shadow-sm hover:shadow-md transition-all duration-200 relative overflow-hidden task",
         themeColors.border,    
-        themeColors.hoverBorder  
+        themeColors.hoverBorder,
+        
+      // performans için optimize edilmiş sınıflar
+        "touch-none will-change-transform", 
+
+        isOverlay ? "cursor-grabbing shadow-2xl opacity-90" : "cursor-grab active:cursor-grabbing"
       )}
       onMouseEnter={() => setMouseIsOver(true)}
       onMouseLeave={() => setMouseIsOver(false)}
     >
       
       <div className="flex items-start gap-2 h-full">
-        <div className="mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        <div className={cn("mt-1 transition-opacity duration-200", isOverlay ? "opacity-100" : "opacity-0 group-hover:opacity-100")}>
           <GripVertical size={14} className="text-stone-300 dark:text-neutral-600 hover:text-stone-500 dark:hover:text-neutral-400" />
         </div>
         
@@ -150,4 +151,4 @@ const TaskCard = ({ task, columnTheme,updateTask }) => {
   );
 };
 
-export default TaskCard;
+export default memo(TaskCard);

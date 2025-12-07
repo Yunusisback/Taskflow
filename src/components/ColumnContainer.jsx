@@ -1,51 +1,47 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, memo } from "react";
 import TaskCard from "./TaskCard";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { Trash2, Plus, GripVertical, Pencil } from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { cn } from "../lib/utils"; 
+import { cn } from "../lib/utils";
 
 // Sütun Konteyneri Bileşeni
-const ColumnContainer = ({ 
-  column, 
+const ColumnContainer = ({
+  column,
   deleteColumn,
   updateColumn,
-  createTask, 
-  tasks, 
-  updateTask 
+  createTask,
+  tasks,
+  updateTask
 }) => {
   const [editMode, setEditMode] = useState(false);
   const [title, setTitle] = useState(column.title);
 
-// Görevlerin ID lerini hafızada tutarak performansı artırıyoruz
+  // Görevlerin ID lerini hafızada tutarak performansı artırıyoruz
   const tasksIds = useMemo(() => tasks.map(t => t.id), [tasks]);
 
-  // Sütun kimliğine (id) göre renk teması belirleme
   const colorTheme = useMemo(() => {
-      if (column.id === 'todo') return 'blue';    
-      if (column.id === 'doing') return 'amber';   
-      if (column.id === 'done') return 'emerald'; 
-      return 'stone'; 
+    if (column.id === 'todo') return 'blue';
+    if (column.id === 'doing') return 'amber';
+    if (column.id === 'done') return 'emerald';
+    return 'stone';
   }, [column.id]);
 
   const variants = {
     stone: {
-   
-      bg: "bg-stone-50 dark:bg-neutral-900/40",
-      
-      headerBg: "bg-stone-200/80 dark:bg-neutral-800",
+      bg: "bg-stone-50 dark:bg-neutral-900",
+      headerBg: "bg-stone-200 dark:bg-neutral-800",
       border: "border-stone-200 dark:border-neutral-800",
       hoverBorder: "hover:border-stone-400 dark:hover:border-neutral-600",
       text: "text-stone-700 dark:text-neutral-300",
       accent: "bg-white text-stone-600 dark:bg-neutral-700 dark:text-neutral-300",
       buttonHover: "hover:bg-stone-200 dark:hover:bg-neutral-800",
-      shadow: "hover:shadow-stone-200/50 dark:hover:shadow-neutral-900/50"
+      shadow: "hover:shadow-xl dark:hover:shadow-neutral-900/50"
     },
     blue: {
-      bg: "bg-stone-50 dark:bg-neutral-900/40",
-    
-      headerBg: "bg-blue-300 dark:bg-blue-800/60",
+      bg: "bg-stone-50 dark:bg-neutral-900",
+      headerBg: "bg-blue-300 dark:bg-blue-800",
       border: "border-blue-200 dark:border-blue-900/30",
       hoverBorder: "hover:border-blue-400 dark:hover:border-blue-700",
       text: "text-blue-900 dark:text-blue-100",
@@ -54,9 +50,8 @@ const ColumnContainer = ({
       shadow: "hover:shadow-blue-600/30 dark:hover:shadow-blue-600/80"
     },
     amber: {
-      bg: "bg-stone-50 dark:bg-neutral-900/40",
-    
-      headerBg: "bg-amber-200 dark:bg-amber-900/50",
+      bg: "bg-stone-50 dark:bg-neutral-900",
+      headerBg: "bg-amber-200 dark:bg-amber-900",
       border: "border-amber-200 dark:border-amber-900/30",
       hoverBorder: "hover:border-amber-400 dark:hover:border-amber-700",
       text: "text-amber-900 dark:text-amber-400",
@@ -65,9 +60,8 @@ const ColumnContainer = ({
       shadow: "hover:shadow-amber-500/30 dark:hover:shadow-amber-600/50"
     },
     emerald: {
-      bg: "bg-stone-50 dark:bg-neutral-900/40",
-      
-      headerBg: "bg-emerald-300 dark:bg-emerald-900/60",
+      bg: "bg-stone-50 dark:bg-neutral-900",
+      headerBg: "bg-emerald-300 dark:bg-emerald-900",
       border: "border-emerald-200 dark:border-emerald-900/30",
       hoverBorder: "hover:border-emerald-400 dark:hover:border-emerald-700",
       text: "text-emerald-900 dark:text-emerald-400",
@@ -80,13 +74,13 @@ const ColumnContainer = ({
   const theme = variants[colorTheme];
 
   // dnd-kit Hooku sütun için
-  const { 
-    setNodeRef, 
-    attributes, 
-    listeners, 
-    transform, 
-    transition, 
-    isDragging 
+  const {
+    setNodeRef,
+    attributes,
+    listeners,
+    transform,
+    transition,
+    isDragging
   } = useSortable({
     id: column.id,
     data: { type: "Column", column },
@@ -116,8 +110,8 @@ const ColumnContainer = ({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "group/column flex h-full w-96 shrink-0 flex-col rounded-3xl backdrop-blur-md border transition-all hover:shadow-2xl",
-        theme.bg, 
+        "group/column flex h-full w-96 shrink-0 flex-col rounded-3xl border transition-all hover:shadow-xl",
+        theme.bg,
         theme.border,
         theme.hoverBorder,
         theme.shadow
@@ -159,6 +153,7 @@ const ColumnContainer = ({
         </div>
 
         <div className="flex gap-1 opacity-0 group-hover/header:opacity-100 transition-opacity">
+
           {/* Düzenle Butonu */}
           <button
             onClick={() => setEditMode(true)}
@@ -166,8 +161,9 @@ const ColumnContainer = ({
           >
             <Pencil size={16} />
           </button>
-          
+
           {/* Silme Butonu  */}
+
           {column.id !== "todo" && column.id !== "doing" && column.id !== "done" && (
             <button
               onClick={() => deleteColumn(column.id)}
@@ -178,9 +174,8 @@ const ColumnContainer = ({
           )}
         </div>
       </div>
-    
 
-       {/* Ayırıcı Çizgi */}
+      {/* Ayırıcı Çizgi */}
       <div className="h-px bg-stone-200/50 dark:bg-neutral-700/50 shrink-0" />
 
       {/* Görev Listesi */}
@@ -190,8 +185,7 @@ const ColumnContainer = ({
             <TaskCard
               key={task.id}
               task={task}
-              columnTheme={colorTheme} 
-  
+              columnTheme={colorTheme}
               updateTask={updateTask}
             />
           ))}
@@ -223,4 +217,4 @@ const ColumnContainer = ({
   );
 };
 
-export default ColumnContainer;
+export default memo(ColumnContainer);

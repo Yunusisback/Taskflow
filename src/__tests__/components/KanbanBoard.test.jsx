@@ -2,7 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import KanbanBoard from '../../components/KanbanBoard';
 
-
+// useKanbanData hook unun fonksiyonlarını ve verilerini mockluyoruz
 const mockCreateNewColumn = vi.fn();
 const mockData = {
   columns: [{ id: 'col1', title: 'Test Sütun' }],
@@ -24,6 +24,7 @@ vi.mock('../../hooks/useKanbanData', () => ({
 
 
 vi.mock('../../components/ColumnContainer', () => ({
+
   default: ({ column }) => <div data-testid="column">{column.title}</div>,
 }));
 
@@ -44,15 +45,18 @@ vi.mock('@dnd-kit/core', async () => {
     DragOverlay: () => null,
   };
 });
-
+// KanbanBoard bileşen testi
 describe('KanbanBoard Component', () => {
   it('başlığı ve sütunları render etmeli', () => {
     render(<KanbanBoard darkMode={false} toggleTheme={() => {}} />);
     
     expect(screen.getByText('Taskflow')).toBeInTheDocument();
-    expect(screen.getByText('Test Sütun')).toBeInTheDocument();
+    
+    
+    expect(screen.getByTestId('column')).toHaveTextContent('Test Sütun');
   });
 
+  // Tema değiştirme butonunun çalıştığını test et
   it('tema değiştirme butonuna basınca fonksiyon çalışmalı', () => {
     const mockToggle = vi.fn();
     render(<KanbanBoard darkMode={false} toggleTheme={mockToggle} />);
@@ -66,10 +70,11 @@ describe('KanbanBoard Component', () => {
 
   it('yeni liste ekle butonuna basınca createNewColumn çalışmalı', () => {
     render(<KanbanBoard darkMode={false} toggleTheme={() => {}} />);
-    
-    const addColBtn = screen.getByText('Yeni Liste');
-    fireEvent.click(addColBtn);
-    
+
+    //  Butonun tam metni 'Yeni Liste Ekle'
+    const addButton = screen.getByText('Yeni Liste Ekle'); 
+    fireEvent.click(addButton);
+
     expect(mockCreateNewColumn).toHaveBeenCalled();
   });
 });

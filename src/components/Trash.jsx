@@ -59,7 +59,8 @@ const Trash = ({ isOpen, onClose, trashItems, restoreItem, deletePermanently }) 
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-3">
-                    {/* Sütun mu görev mi? */}
+                    
+                    {/* Sütun veya görev ikonunu belirleyen alan */}
                     <div className={`p-2 rounded-lg ${item.type === 'column' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-500 dark:text-blue-400' : 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 dark:text-emerald-400'}`}>
                       {item.type === 'column' ? <Layout size={18} /> : <FileText size={18} />}
                     </div>
@@ -74,7 +75,7 @@ const Trash = ({ isOpen, onClose, trashItems, restoreItem, deletePermanently }) 
                     </div>
                   </div>
 
-                  {/* Aksiyon Butonları */}
+                  {/* Geri yükle ve kalıcı sil butonları */}
                   <div className="flex gap-2">
                     <button 
                       onClick={() => restoreItem(item)}

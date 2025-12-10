@@ -15,7 +15,7 @@ describe('useKanbanData Hook', () => {
 
     expect(result.current.columns).toHaveLength(3);
     expect(result.current.columns[0].id).toBe('todo');
-    expect(result.current.tasks).toHaveLength(3); // Varsayılan 3 görev
+    expect(result.current.tasks).toHaveLength(3); 
     expect(result.current.trash).toHaveLength(0);
   });
 
@@ -27,7 +27,8 @@ describe('useKanbanData Hook', () => {
     });
 
     expect(result.current.columns).toHaveLength(4);
-    expect(result.current.columns[3].title).toContain('Sütun');
+    // useKanbanData.js'de "Liste" kullanıyor, "Sütun" değil
+    expect(result.current.columns[3].title).toContain('Liste');
   });
 
   it('yeni görev ekleyebilmeli', () => {

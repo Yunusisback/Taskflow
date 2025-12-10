@@ -13,7 +13,10 @@ const ColumnContainer = ({
   updateColumn,
   createTask,
   tasks,
-  updateTask
+  updateTask,
+  deleteTask,
+  moveTask, 
+  isOverlay
 }) => {
   const [editMode, setEditMode] = useState(false);
   const [title, setTitle] = useState(column.title);
@@ -25,55 +28,52 @@ const ColumnContainer = ({
     if (column.id === 'todo') return 'blue';
     if (column.id === 'doing') return 'amber';
     if (column.id === 'done') return 'emerald';
-    return 'stone';
+    return 'zinc';
   }, [column.id]);
 
+  
   const variants = {
-    stone: {
-      bg: "bg-stone-50 dark:bg-neutral-900",
-      headerBg: "bg-stone-200 dark:bg-neutral-800",
-      border: "border-stone-200 dark:border-neutral-800",
-      hoverBorder: "hover:border-stone-400 dark:hover:border-neutral-600",
-      text: "text-stone-700 dark:text-neutral-300",
-      accent: "bg-white text-stone-600 dark:bg-neutral-700 dark:text-neutral-300",
-      buttonHover: "hover:bg-stone-200 dark:hover:bg-neutral-800",
-      shadow: "hover:shadow-xl dark:hover:shadow-neutral-900/50"
+    zinc: {
+      bg: "bg-zinc-50 dark:bg-zinc-900/70",
+      headerBg: "bg-zinc-200 dark:bg-zinc-800",
+      border: "border-zinc-200 dark:border-zinc-700",
+      hoverBorder: "hover:border-zinc-300 dark:hover:border-zinc-600",
+      text: "text-zinc-800 dark:text-zinc-200",
+      accent: "bg-white text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300",
+      buttonHover: "hover:bg-zinc-300 dark:hover:bg-zinc-700",
     },
     blue: {
-      bg: "bg-stone-50 dark:bg-neutral-900",
-      headerBg: "bg-blue-300 dark:bg-blue-800",
-      border: "border-blue-200 dark:border-blue-900/30",
-      hoverBorder: "hover:border-blue-400 dark:hover:border-blue-700",
-      text: "text-blue-900 dark:text-blue-100",
-      accent: "bg-white text-blue-700 dark:bg-blue-800 dark:text-blue-200",
-      buttonHover: "hover:bg-blue-200 dark:hover:bg-blue-900/40",
-      shadow: "hover:shadow-blue-600/30 dark:hover:shadow-blue-600/80"
+      bg: "bg-zinc-50 dark:bg-zinc-900/70",
+      headerBg: "bg-blue-400 dark:bg-blue-600/80",
+      border: "border-blue-300 dark:border-blue-600/50",
+      hoverBorder: "hover:border-blue-500 dark:hover:border-blue-400",
+      text: "text-white dark:text-white",
+      accent: "bg-white/20 text-white dark:bg-blue-400/30 dark:text-blue-100",
+      buttonHover: "hover:bg-blue-300/30 dark:hover:bg-blue-500/30",
     },
     amber: {
-      bg: "bg-stone-50 dark:bg-neutral-900",
-      headerBg: "bg-amber-200 dark:bg-amber-900",
-      border: "border-amber-200 dark:border-amber-900/30",
-      hoverBorder: "hover:border-amber-400 dark:hover:border-amber-700",
-      text: "text-amber-900 dark:text-amber-400",
-      accent: "bg-white text-amber-700 dark:bg-amber-800 dark:text-amber-200",
-      buttonHover: "hover:bg-amber-200 dark:hover:bg-amber-900/40",
-      shadow: "hover:shadow-amber-500/30 dark:hover:shadow-amber-600/50"
+      bg: "bg-zinc-50 dark:bg-zinc-900/70",
+      headerBg: "bg-amber-400 dark:bg-amber-600/80",
+      border: "border-amber-300 dark:border-amber-600/50",
+      hoverBorder: "hover:border-amber-500 dark:hover:border-amber-400",
+      text: "text-white dark:text-white",
+      accent: "bg-white/20 text-white dark:bg-amber-400/30 dark:text-amber-100",
+      buttonHover: "hover:bg-amber-300/30 dark:hover:bg-amber-500/30",
     },
     emerald: {
-      bg: "bg-stone-50 dark:bg-neutral-900",
-      headerBg: "bg-emerald-300 dark:bg-emerald-900",
-      border: "border-emerald-200 dark:border-emerald-900/30",
-      hoverBorder: "hover:border-emerald-400 dark:hover:border-emerald-700",
-      text: "text-emerald-900 dark:text-emerald-400",
-      accent: "bg-white text-emerald-700 dark:bg-emerald-800 dark:text-emerald-200",
-      buttonHover: "hover:bg-emerald-200 dark:hover:bg-emerald-900/40",
-      shadow: "hover:shadow-emerald-400/30 dark:hover:shadow-emerald-500/60"
+      bg: "bg-zinc-50 dark:bg-zinc-900/70",
+      headerBg: "bg-emerald-400 dark:bg-emerald-500/80",
+      border: "border-emerald-300 dark:border-emerald-600/50",
+      hoverBorder: "hover:border-emerald-500 dark:hover:border-emerald-400",
+      text: "text-white dark:text-white",
+      accent: "bg-white/20 text-white dark:bg-emerald-400/30 dark:text-emerald-100",
+      buttonHover: "hover:bg-emerald-300/30 dark:hover:bg-emerald-500/30",
     }
   };
 
   const theme = variants[colorTheme];
 
-  // dnd-kit Hooku sütun için
+  // Sıralama için DND Kit kullanımı
   const {
     setNodeRef,
     attributes,
@@ -84,10 +84,12 @@ const ColumnContainer = ({
   } = useSortable({
     id: column.id,
     data: { type: "Column", column },
+    disabled: isOverlay
   });
 
   const style = { transition, transform: CSS.Transform.toString(transform) };
 
+  // Başlık Kaydetme Fonksiyonu
   const saveTitle = () => {
     if (title.trim() && title !== column.title) {
       updateColumn(column.id, title.trim());
@@ -100,7 +102,7 @@ const ColumnContainer = ({
       <div
         ref={setNodeRef}
         style={style}
-        className="w-96 shrink-0 rounded-3xl border-2 border-dashed border-stone-300 dark:border-neutral-700 bg-stone-50 dark:bg-neutral-900 h-full opacity-50"
+        className="w-75 shrink-0 rounded-3xl border-2 border-dashed border-zinc-400 dark:border-zinc-600 bg-zinc-100/50 dark:bg-zinc-900/40 h-[75vh] opacity-50"
       />
     );
   }
@@ -110,28 +112,25 @@ const ColumnContainer = ({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "group/column flex h-full w-96 shrink-0 flex-col rounded-3xl border transition-all hover:shadow-xl",
+        "group/column flex h-[75vh] w-75 shrink-0 flex-col rounded-3xl  transition-all duration-300 shadow-lg dark:shadow-xl",
         theme.bg,
         theme.border,
-        theme.hoverBorder,
-        theme.shadow
+        theme.hoverBorder
       )}
     >
-      {/* header */}
-      <div className={cn("flex h-16 items-center justify-between px-4 gap-3 group/header shrink-0 rounded-t-[22px]", theme.headerBg)}>
+      {/* HEADER */}
+      <div className={cn("flex h-16 items-center justify-between px-4 gap-3 group/header shrink-0 rounded-t-3xl backdrop-blur-sm", theme.headerBg)}>
         <div className="flex items-center gap-3">
           <div
             {...attributes}
             {...listeners}
-            className="cursor-grab active:cursor-grabbing text-stone-500 dark:text-neutral-400 hover:text-stone-700 dark:hover:text-neutral-200"
+            className="cursor-grab active:cursor-grabbing opacity-60 hover:opacity-100 transition-opacity"
           >
-            <GripVertical size={22} />
+            <GripVertical size={22} className={theme.text} />
           </div>
 
           <div className="flex items-center gap-2.5">
-
-            {/* Görev sayısı rozeti */}
-            <div className={cn("flex items-center border-3  justify-center min-w-[48px] px-2.5 py-1 text-sm font-bold rounded-full shadow-sm", theme.accent)}>
+            <div className={cn("flex items-center justify-center min-w-7 px-2.5 py-1.5 text-xs font-bold rounded-lg shadow-sm backdrop-blur-md", theme.accent)}>
               {tasks.length}
             </div>
 
@@ -142,7 +141,7 @@ const ColumnContainer = ({
                 onChange={(e) => setTitle(e.target.value)}
                 onBlur={saveTitle}
                 onKeyDown={(e) => e.key === "Enter" && saveTitle()}
-                className="w-48 px-2 py-1 text-lg font-semibold bg-white dark:bg-neutral-800 rounded-lg border border-stone-300 dark:border-neutral-600 focus:outline-none focus:border-emerald-500 text-stone-800 dark:text-neutral-100 shadow-sm"
+                className="w-36 px-3 py-1.5 text-lg font-bold bg-white/70 dark:bg-black/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-white/30"
               />
             ) : (
               <h2 className={cn("text-lg font-bold select-none", theme.text)}>
@@ -152,22 +151,18 @@ const ColumnContainer = ({
           </div>
         </div>
 
-        <div className="flex gap-1 opacity-0 group-hover/header:opacity-100 transition-opacity">
-
-          {/* Düzenle Butonu */}
+        <div className="flex gap-2 opacity-0 group-hover/header:opacity-100 transition-opacity">
           <button
             onClick={() => setEditMode(true)}
-            className={cn("p-2 rounded-xl text-stone-600 dark:text-neutral-300 transition-all cursor-pointer hover:scale-110 active:scale-95", theme.buttonHover)}
+            className={cn("p-2.5 rounded-xl transition-all hover:scale-110 active:scale-95", theme.buttonHover)}
           >
-            <Pencil size={16} />
+            <Pencil size={16} className={theme.text} />
           </button>
-
-          {/* Silme Butonu  */}
 
           {column.id !== "todo" && column.id !== "doing" && column.id !== "done" && (
             <button
               onClick={() => deleteColumn(column.id)}
-              className="p-2 rounded-xl text-stone-600 dark:text-neutral-300 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/30 transition-all cursor-pointer hover:scale-110 active:scale-95"
+              className="p-2.5 rounded-xl bg-rose-500/20 hover:bg-rose-500 hover:text-white text-rose-600 hover:scale-110 active:scale-95 transition-all"
             >
               <Trash2 size={16} />
             </button>
@@ -175,11 +170,10 @@ const ColumnContainer = ({
         </div>
       </div>
 
-      {/* Ayırıcı Çizgi */}
-      <div className="h-px bg-stone-200/50 dark:bg-neutral-700/50 shrink-0" />
+      <div className="h-px bg-zinc-200/60 dark:bg-zinc-700/60 shrink-0" />
 
-      {/* Görev Listesi */}
-      <div className="flex flex-1 flex-col gap-3 overflow-y-auto overflow-x-hidden px-3 pt-3 pb-2 min-h-0 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-stone-300/50 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-700/50">
+      {/* GÖREV LİSTESİ */}
+      <div className="flex flex-1 flex-col gap-3 px-3 pt-3 pb-2 overflow-hidden">
         <SortableContext items={tasksIds} strategy={verticalListSortingStrategy}>
           {tasks.map((task) => (
             <TaskCard
@@ -187,26 +181,27 @@ const ColumnContainer = ({
               task={task}
               columnTheme={colorTheme}
               updateTask={updateTask}
+              deleteTask={deleteTask} 
+              moveTask={moveTask} 
             />
           ))}
         </SortableContext>
 
         {tasks.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-stone-400 dark:text-neutral-600">
+          <div className="flex flex-col items-center justify-center h-full text-zinc-500 dark:text-zinc-400 select-none">
             <div className="text-sm italic">Henüz görev yok</div>
             <div className="text-xs mt-1 opacity-70">Buraya görev sürükleyin</div>
           </div>
         )}
       </div>
 
-      {/* yeni görev ekle */}
-      <div className="px-3 pb-4 shrink-0">
+      {/* Yeni Görev Ekle */}
+      <div className="p-3 shrink-0">
         <button
           onClick={() => createTask(column.id)}
           className={cn(
-            "flex w-full items-center gap-2.5 rounded-xl px-3 py-3 transition-all font-medium text-sm group/add cursor-pointer active:scale-95",
-            "text-stone-500 dark:text-neutral-500 hover:text-stone-800 dark:hover:text-neutral-300",
-            theme.buttonHover
+            "flex w-full items-center justify-center gap-2 rounded-xl py-3 transition-all font-medium text-sm group/add cursor-pointer active:scale-95 border border-zinc-200 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500 hover:shadow-lg hover:bg-white/50 dark:hover:bg-zinc-800/60",
+            "text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100"
           )}
         >
           <Plus size={18} className="group-hover/add:scale-110 transition-transform" />

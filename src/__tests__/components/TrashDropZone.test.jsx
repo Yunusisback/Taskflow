@@ -24,7 +24,7 @@ describe('TrashDropZone Component', () => {
     const button = screen.getByTitle('Çöp Kutusu (Sürükleyip Bırakabilirsiniz)');
     expect(button).toBeInTheDocument();
 
-    // Normal renkler (class kontrolü yapmak zor olabilir ama text kontrolü yapabiliriz)
+    // Normal renkler 
     expect(screen.queryByText('Silmek için bırak')).not.toBeInTheDocument();
   });
 

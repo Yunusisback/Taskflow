@@ -1,44 +1,40 @@
 import { useState } from "react";
 import { useAutoSave } from "./useAutoSave";
 
-// Kanban verilerini yönetmek için özel hook
 export const useKanbanData = () => {
   const defaultColumns = [
     { id: "todo", title: "Yapılacaklar" },
     { id: "doing", title: "İşleniyor" },
     { id: "done", title: "Tamamlandı" },
   ];
-// Örnek görevler
+
   const defaultTasks = [
     { id: "1", columnId: "todo", content: "React Öğren" },
     { id: "2", columnId: "doing", content: "Sürükle Bırak Mantığı" },
     { id: "3", columnId: "done", content: "Projeyi Kur" },
   ];
-// Sütunlar, görevler ve çöp kutusu için durum yönetimi
+
+  // Sütunları başlatma mantığı 
   const [columns, setColumns] = useState(() => {
     const saved = localStorage.getItem("kanban_columns");
-    const parsedData = saved ? JSON.parse(saved) : defaultColumns;
+    const parsedData = saved ? JSON.parse(saved) : [];
 
-    //  Eğer hafızada temel sütunlar (todo doing  done) yoksa  onları geri ekle
-    const hasTodo = parsedData.some(col => col.id === "todo");
-    const hasDoing = parsedData.some(col => col.id === "doing");
-    const hasDone = parsedData.some(col => col.id === "done");
+    //  Varsayılan sütunları her zaman ekle
+    const userCustomColumns = parsedData.filter(col =>
+      col.id !== "todo" && col.id !== "doing" && col.id !== "done"
+    );
 
-    if (!hasTodo || !hasDoing || !hasDone) {
-
-      // Eksik olanları varsayılanlardan al kullanıcının eklediği diğer sütunları koru
-      const userCustomColumns = parsedData.filter(col => !["todo", "doing", "done"].includes(col.id));
-      return [...defaultColumns, ...userCustomColumns];
-    }
-
-    return parsedData;
+    // Varsayılan sütunları en başta tutarak geri kalan kullanıcı sütunlarını ekle
+    return [...defaultColumns, ...userCustomColumns];
   });
-// Görevler
+
+  // Görevleri başlatma mantığı
   const [tasks, setTasks] = useState(() => {
     const saved = localStorage.getItem("kanban_tasks");
     return saved ? JSON.parse(saved) : defaultTasks;
   });
-// Çöp kutusu
+
+  // Çöp kutusu verileri
   const [trash, setTrash] = useState(() => {
     const saved = localStorage.getItem("kanban_trash");
     return saved ? JSON.parse(saved) : [];
@@ -46,27 +42,29 @@ export const useKanbanData = () => {
 
   useAutoSave(columns, tasks, trash);
 
-// Benzersiz ID oluşturucu
   const generateId = () => Date.now().toString() + Math.floor(Math.random() * 10001);
 
+  // Yeni sütun oluştur
   const createNewColumn = () => {
-    const newCol = { id: generateId(), title: `Sütun ${columns.length + 1}` };
+    const newCol = { id: generateId(), title: `Liste ${columns.length - 2}` }; 
     setColumns([...columns, newCol]);
   };
-// Yeni görev oluşturucu
+
+  // Yeni görev oluştur
   const createTask = (columnId) => {
     const newTask = { id: generateId(), columnId, content: "Yeni görev" };
     setTasks([...tasks, newTask]);
   };
-// Sütun güncelleme
+
+  // Sütun başlığını güncelle
   const updateColumn = (id, newTitle) => {
     setColumns(columns.map(col => col.id === id ? { ...col, title: newTitle } : col));
   };
-// Sütun silme
+
   const deleteColumn = (id) => {
-    // Bu ID lere sahip sütunların silinmesini engelliyoruz
+    // Ana sütunlar asla silinemez
     if (id === "todo" || id === "doing" || id === "done") return;
-    
+
     const column = columns.find(c => c.id === id);
     const columnTasks = tasks.filter(t => t.columnId === id);
     const trashItem = { ...column, type: "column", deletedTasks: columnTasks, deletedAt: Date.now() };
@@ -74,38 +72,47 @@ export const useKanbanData = () => {
     setColumns(columns.filter(c => c.id !== id));
     setTasks(tasks.filter(t => t.columnId !== id));
   };
-// Görev silme
+
+  // Görevi sil ve çöp kutusuna at
   const deleteTask = (id) => {
     const task = tasks.find(t => t.id === id);
     const trashItem = { ...task, type: "task", deletedAt: Date.now() };
     setTrash([trashItem, ...trash]);
     setTasks(tasks.filter(t => t.id !== id));
   };
-// Görev güncelleme
+
+  // Görevi güncelle
   const updateTask = (id, content) => {
     setTasks(tasks.map(t => t.id === id ? { ...t, content } : t));
   };
-// Geri yükleme
+
+  //  Görevi başka sütuna taşı
+  const moveTask = (taskId, targetColumnId) => {
+    setTasks(tasks.map(t =>
+      t.id === taskId ? { ...t, columnId: targetColumnId } : t
+    ));
+  };
+  //  Çöp kutusu işlemleri
   const restoreItem = (item) => {
     if (item.type === "column") {
       setColumns([...columns, { id: item.id, title: item.title }]);
       if (item.deletedTasks) setTasks(prev => [...prev, ...item.deletedTasks]);
     } else if (item.type === "task") {
-      const targetCol = columns.find(c => c.id === item.columnId) ? item.columnId : columns[0]?.id || "todo";
+      const targetCol = columns.find(c => c.id === item.columnId) ? item.columnId : "todo";
       setTasks(prev => [...prev, { ...item, columnId: targetCol }]);
     }
     setTrash(trash.filter(t => t.deletedAt !== item.deletedAt));
   };
-// Kalıcı silme
+  // Çöp kutusundan kalıcı sil
   const deletePermanently = (deletedAt) => {
     setTrash(trash.filter(t => t.deletedAt !== deletedAt));
   };
-// Tüm fonksiyonları ve durumları döndürüyoruz
+
   return {
     columns,
-    setColumns,   
+    setColumns,
     tasks,
-    setTasks,    
+    setTasks,
     trash,
     createNewColumn,
     createTask,
@@ -113,6 +120,7 @@ export const useKanbanData = () => {
     deleteColumn,
     deleteTask,
     updateTask,
+    moveTask,
     restoreItem,
     deletePermanently,
   };

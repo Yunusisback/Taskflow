@@ -20,6 +20,16 @@ const TaskCard = ({ task, columnTheme, updateTask, deleteTask, moveTask, isOverl
     }
   }, [columnTheme]);
 
+  // Scroll bar renkleri 
+  const scrollbarColor = useMemo(() => {
+    switch (columnTheme) {
+      case 'blue': return '[&::-webkit-scrollbar-thumb]:bg-blue-400 dark:[&::-webkit-scrollbar-thumb]:bg-blue-500';
+      case 'amber': return '[&::-webkit-scrollbar-thumb]:bg-amber-400 dark:[&::-webkit-scrollbar-thumb]:bg-amber-500';
+      case 'emerald': return '[&::-webkit-scrollbar-thumb]:bg-emerald-400 dark:[&::-webkit-scrollbar-thumb]:bg-emerald-500';
+      default: return '[&::-webkit-scrollbar-thumb]:bg-zinc-300 dark:[&::-webkit-scrollbar-thumb]:bg-zinc-600';
+    }
+  }, [columnTheme]);
+
   const {
     setNodeRef,
     attributes,
@@ -80,10 +90,20 @@ const TaskCard = ({ task, columnTheme, updateTask, deleteTask, moveTask, isOverl
     >
       {editMode ? (
         <textarea
-          className="h-full w-full resize-none bg-transparent text-sm text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none"
+          className={cn(
+            "h-full w-full resize-none bg-transparent text-sm text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-300 dark:placeholder:text-zinc-600 placeholder:italic focus:outline-none",
+      
+            "[&::-webkit-scrollbar]:w-1.5",
+            "[&::-webkit-scrollbar-track]:bg-transparent",
+            "[&::-webkit-scrollbar-thumb]:rounded-full",
+            "[&::-webkit-scrollbar-thumb]:transition-colors",
+            scrollbarColor,
+            "[&::-webkit-scrollbar-thumb]:hover:brightness-90"
+          )}
           value={task.content}
           autoFocus
-          placeholder="Ne yapılması gerekiyor?"
+          placeholder="Not yazın..."
+          onClick={(e) => e.stopPropagation()}
           onBlur={toggleEditMode}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {

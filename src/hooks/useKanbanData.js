@@ -8,11 +8,7 @@ export const useKanbanData = () => {
     { id: "done", title: "Tamamlandı" },
   ];
 
-  const defaultTasks = [
-    { id: "1", columnId: "todo", content: "React Öğren" },
-    { id: "2", columnId: "doing", content: "Sürükle Bırak Mantığı" },
-    { id: "3", columnId: "done", content: "Projeyi Kur" },
-  ];
+  const defaultTasks = [];
 
   // Sütunları başlatma mantığı 
   const [columns, setColumns] = useState(() => {

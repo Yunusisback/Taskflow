@@ -19,14 +19,14 @@ import ConfirmModal from "./ConfirmModal";
 import FloatingNav from "./FloatingNav";
 import { useKanbanData } from "../hooks/useKanbanData";
 
-//
+ 
 const KanbanBoard = ({ darkMode, toggleTheme }) => {
   const scrollRef = useRef(null);
   const itemsRef = useRef([]);
   const isManualScroll = useRef(false);
   const scrollTimeout = useRef(null);
   
-  //
+  
   const {
     columns,
     setColumns,
@@ -44,7 +44,7 @@ const KanbanBoard = ({ darkMode, toggleTheme }) => {
     deletePermanently,
   } = useKanbanData();
 
-  
+   // Çöp kutusu ve onay modal durumları
   const [isTrashOpen, setIsTrashOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
@@ -84,7 +84,7 @@ const KanbanBoard = ({ darkMode, toggleTheme }) => {
     return () => observer.disconnect();
   }, [columns.length]);
 
-  // Navigasyon Fonksiyonu 
+  // Navigasyon fonksiyonu
   const navigateToColumn = useCallback((index) => {
     if (scrollRef.current) {
       isManualScroll.current = true;
@@ -92,7 +92,7 @@ const KanbanBoard = ({ darkMode, toggleTheme }) => {
 
       const itemWidth = 344; 
       
-      // Hesaplanan hedef kaydırma konumu
+      // Hesaplanan hedef kaydırma pozisyonu
       const targetScroll = index * itemWidth;
 
       // Kaydırma işlemi
@@ -109,7 +109,7 @@ const KanbanBoard = ({ darkMode, toggleTheme }) => {
     }
   }, []);
 
-  // Veri İndirme Fonksiyonu
+  // Veri inndirme fonksiyonu
   const download = () => {
     const data = { columns, tasks, trash, date: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
@@ -121,7 +121,7 @@ const KanbanBoard = ({ darkMode, toggleTheme }) => {
     URL.revokeObjectURL(url);
   };
 
-  // Sürükleme Olayları
+  // Sürükleme olayları
   const onDragStart = (e) => {
     if (e.active.data.current?.type === "Column") setActiveCol(e.active.data.current.column);
     if (e.active.data.current?.type === "Task") setActiveTask(e.active.data.current.task);

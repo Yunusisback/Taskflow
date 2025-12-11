@@ -16,31 +16,31 @@ const FloatingNav = ({ columns, tasks, activeColumnIndex, onNavigate }) => {
     return taskCounts[columnId] || 0;
   };
 
-  // Sütun temasına göre renk ayarları
+  // Sütun temasına göre renk ayarları 
   const getColorTheme = (columnId) => {
     if (columnId === 'todo') return {
-      dot: 'bg-blue-500 dark:bg-blue-400',
-      ring: 'ring-blue-500/30 dark:ring-blue-400/30',
+      dot: 'bg-blue-500 dark:bg-blue-500',
+      ring: 'ring-blue-500/30 dark:ring-blue-500/40',
       text: 'text-blue-600 dark:text-blue-400',
-      hover: 'hover:bg-blue-500 dark:hover:bg-blue-400'
+      hover: 'hover:bg-blue-500 dark:hover:bg-blue-500'
     };
     if (columnId === 'doing') return {
-      dot: 'bg-amber-500 dark:bg-amber-400',
-      ring: 'ring-amber-500/30 dark:ring-amber-400/30',
+      dot: 'bg-amber-500 dark:bg-amber-500',
+      ring: 'ring-amber-500/30 dark:ring-amber-500/40',
       text: 'text-amber-600 dark:text-amber-400',
-      hover: 'hover:bg-amber-500 dark:hover:bg-amber-400'
+      hover: 'hover:bg-amber-500 dark:hover:bg-amber-500'
     };
     if (columnId === 'done') return {
-      dot: 'bg-emerald-500 dark:bg-emerald-400',
-      ring: 'ring-emerald-500/30 dark:ring-emerald-400/30',
+      dot: 'bg-emerald-500 dark:bg-emerald-500',
+      ring: 'ring-emerald-500/30 dark:ring-emerald-500/40',
       text: 'text-emerald-600 dark:text-emerald-400',
-      hover: 'hover:bg-emerald-500 dark:hover:bg-emerald-400'
+      hover: 'hover:bg-emerald-500 dark:hover:bg-emerald-500'
     };
     return {
-      dot: 'bg-stone-400 dark:bg-neutral-500',
-      ring: 'ring-stone-400/30 dark:ring-neutral-500/30',
-      text: 'text-stone-600 dark:text-neutral-400',
-      hover: 'hover:bg-stone-400 dark:hover:bg-neutral-500'
+      dot: 'bg-stone-400 dark:bg-neutral-400',
+      ring: 'ring-stone-400/30 dark:ring-neutral-400/40',
+      text: 'text-stone-600 dark:text-neutral-300',
+      hover: 'hover:bg-stone-400 dark:hover:bg-neutral-400'
     };
   };
 
@@ -60,15 +60,21 @@ const FloatingNav = ({ columns, tasks, activeColumnIndex, onNavigate }) => {
               className="group relative flex flex-col items-center gap-2 transition-all cursor-pointer"
               title={column.title}
             >
-              {/* Dot */}
-              <div
-                className={cn(
-                  "rounded-full transition-all duration-300",
-                  isActive 
-                    ? cn("w-3 h-3 ring-4", theme.dot, theme.ring)
-                    : cn("w-2.5 h-2.5 opacity-40 group-hover:opacity-100 group-hover:scale-110", theme.dot, theme.hover)
+              {/* Dot + Hafif parıltı  */}
+              <div className="relative">
+                <div
+                  className={cn(
+                    "rounded-full transition-all duration-300",
+                    isActive 
+                      ? cn("w-3 h-3 ring-4 shadow-lg shadow-current/40", theme.dot, theme.ring)
+                      : cn("w-2.5 h-2.5 opacity-40 group-hover:opacity-100 group-hover:scale-110", theme.dot, theme.hover)
+                  )}
+                />
+                {/* Parıltı efekti */}
+                {isActive && (
+                  <div className="absolute inset-0 rounded-full animate-ping bg-current opacity-30" />
                 )}
-              />
+              </div>
 
               {/* Görev Sayısı */}
               <div className={cn(

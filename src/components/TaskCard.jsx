@@ -58,7 +58,7 @@ const TaskCard = ({ task, columnTheme, updateTask, deleteTask, moveTask, isOverl
       <div
         ref={setNodeRef}
         style={style}
-        className="opacity-30 bg-black/5 dark:bg-white/5 h-20 min-h-20 rounded-lg border-2 border-dashed border-zinc-400 dark:border-zinc-600"
+        className="opacity-30 bg-black/5 dark:bg-white/5 h-16 sm:h-20 min-h-16 sm:min-h-20 rounded-lg border-2 border-dashed border-zinc-400 dark:border-zinc-600"
       />
     );
   }
@@ -71,28 +71,23 @@ const TaskCard = ({ task, columnTheme, updateTask, deleteTask, moveTask, isOverl
       {...listeners}
       onClick={toggleEditMode}
       className={cn(
-        "group relative flex flex-col justify-between p-3 min-h-20 rounded-lg border shadow-sm transition-all duration-200",
-     
+        "group relative flex flex-col justify-between p-2.5 sm:p-3 min-h-16 sm:min-h-20 rounded-lg border shadow-sm transition-all duration-200 overflow-hidden",
         "bg-white border-zinc-200", 
-
         "dark:bg-zinc-800 dark:border-zinc-700/50",
-        
-        "hover:shadow-md",
+        "hover:shadow-md active:shadow-lg",
         ringColor, 
-        
         editMode ? "ring-2 ring-inset cursor-text" : "cursor-grab active:cursor-grabbing",
-        
-     
         isOverlay ? "cursor-grabbing shadow-2xl opacity-100 z-50 ring-2 ring-emerald-500/20" : ""
       )}
       onMouseEnter={() => setMouseIsOver(true)}
       onMouseLeave={() => setMouseIsOver(false)}
+      onTouchStart={() => setMouseIsOver(true)}
+      onTouchEnd={() => setTimeout(() => setMouseIsOver(false), 2000)}
     >
       {editMode ? (
         <textarea
           className={cn(
             "h-full w-full resize-none bg-transparent text-sm text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-300 dark:placeholder:text-zinc-600 placeholder:italic focus:outline-none",
-      
             "[&::-webkit-scrollbar]:w-1.5",
             "[&::-webkit-scrollbar-track]:bg-transparent",
             "[&::-webkit-scrollbar-thumb]:rounded-full",
@@ -115,12 +110,34 @@ const TaskCard = ({ task, columnTheme, updateTask, deleteTask, moveTask, isOverl
         />
       ) : (
         <>
-          <p className="text-sm text-zinc-700 dark:text-zinc-200 whitespace-pre-wrap leading-relaxed wrap-break-word">
+          {/* Hover ile scrollable metin alanı */}
+          <div className={cn(
+            "flex-1 overflow-y-auto pr-2 -mr-2",
+            "[&::-webkit-scrollbar]:w-1.5",
+            "[&::-webkit-scrollbar-track]:bg-transparent",
+            "[&::-webkit-scrollbar-thumb]:rounded-full",
+            "[&::-webkit-scrollbar-thumb]:transition-colors",
+            scrollbarColor,
+            mouseIsOver ? "opacity-100" : "opacity-0"
+          )}>
+            <p className="text-sm text-zinc-700 dark:text-zinc-200 whitespace-pre-wrap leading-relaxed break-all">
+              {task.content}
+            </p>
+          </div>
+
+          {/* Statik metin alanı */}
+          <p className={cn(
+            "absolute inset-x-2.5 top-2.5 text-sm text-zinc-700 dark:text-zinc-200 whitespace-pre-wrap leading-relaxed break-all pointer-events-none",
+            mouseIsOver ? "opacity-0" : "opacity-100"
+          )}>
             {task.content}
           </p>
           
-           {/*  Görev İşlem Butonları  */}
-          <div className="flex items-center justify-between mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          {/* Görev İşlem Butonları */}
+          <div className={cn(
+            "flex items-center justify-between mt-2 transition-opacity",
+            mouseIsOver || isOverlay ? "opacity-100" : "opacity-0"
+          )}>
              <div className="text-zinc-300 dark:text-zinc-600">
                 <GripVertical size={14} />
              </div>
@@ -134,11 +151,11 @@ const TaskCard = ({ task, columnTheme, updateTask, deleteTask, moveTask, isOverl
                        e.stopPropagation();
                        moveTask(task.id, 'doing');
                      }}
-                     className="group/btn relative p-1.5 rounded hover:bg-amber-50 dark:hover:bg-amber-900/20 text-zinc-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
+                     className="group/btn relative p-1.5 rounded hover:bg-amber-50 dark:hover:bg-amber-900/20 text-zinc-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors active:scale-95"
                      title="İşleniyor'a taşı"
                    >
                      <ArrowRight size={14} />
-                     <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-zinc-800 dark:bg-zinc-700 text-white text-xs rounded opacity-0 group-hover/btn:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                     <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-zinc-800 dark:bg-zinc-700 text-white text-xs rounded opacity-0 group-hover/btn:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
                        İşleniyor
                      </span>
                    </button>
@@ -147,28 +164,28 @@ const TaskCard = ({ task, columnTheme, updateTask, deleteTask, moveTask, isOverl
                        e.stopPropagation();
                        moveTask(task.id, 'done');
                      }}
-                     className="group/btn relative p-1.5 rounded hover:bg-emerald-50 dark:hover:bg-emerald-900/20 text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+                     className="group/btn relative p-1.5 rounded hover:bg-emerald-50 dark:hover:bg-emerald-900/20 text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors active:scale-95"
                      title="Tamamlandı'ya taşı"
                    >
                      <Check size={14} />
-                     <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-zinc-800 dark:bg-zinc-700 text-white text-xs rounded opacity-0 group-hover/btn:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                     <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-zinc-800 dark:bg-zinc-700 text-white text-xs rounded opacity-0 group-hover/btn:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
                        Tamamlandı
                      </span>
                    </button>
                  </>
                )}
                
-               {/* Sil Butonu  */}
+               {/* Sil Butonu */}
                <button
                  onClick={(e) => {
                    e.stopPropagation(); 
                    deleteTask(task.id);
                  }}
-                 className="group/btn relative p-1.5 rounded hover:bg-rose-50 dark:hover:bg-rose-900/20 text-zinc-400 hover:text-rose-500 transition-colors"
+                 className="group/btn relative p-1.5 rounded hover:bg-rose-50 dark:hover:bg-rose-900/20 text-zinc-400 hover:text-rose-500 transition-colors active:scale-95"
                  title="Sil"
                >
                  <Trash2 size={14} />
-                 <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-zinc-800 dark:bg-zinc-700 text-white text-xs rounded opacity-0 group-hover/btn:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                 <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-zinc-800 dark:bg-zinc-700 text-white text-xs rounded opacity-0 group-hover/btn:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
                    Sil
                  </span>
                </button>

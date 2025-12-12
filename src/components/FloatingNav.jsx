@@ -16,7 +16,7 @@ const FloatingNav = ({ columns, tasks, activeColumnIndex, onNavigate }) => {
     return taskCounts[columnId] || 0;
   };
 
-  // Sütun temasına göre renk ayarları 
+  // Sütun temasına göre renk ayarları (dark modda daha canlı)
   const getColorTheme = (columnId) => {
     if (columnId === 'todo') return {
       dot: 'bg-blue-500 dark:bg-blue-500',
@@ -45,8 +45,8 @@ const FloatingNav = ({ columns, tasks, activeColumnIndex, onNavigate }) => {
   };
 
   return (
-    <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-40 select-none">
-      <div className="flex items-center gap-4 px-6 py-3 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl rounded-full border border-stone-200/50 dark:border-neutral-700/50 shadow-lg shadow-stone-900/5 dark:shadow-black/20">
+    <div className="fixed bottom-2 sm:bottom-3 left-1/2 -translate-x-1/2 z-40 select-none">
+      <div className="flex items-center gap-2.5 sm:gap-4 px-4 sm:px-6 py-2 sm:py-3 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl rounded-full border border-stone-200/50 dark:border-neutral-700/50 shadow-lg shadow-stone-900/5 dark:shadow-black/20">
         {columns.map((column, index) => {
           const theme = getColorTheme(column.id);
           const taskCount = getTaskCount(column.id);
@@ -57,7 +57,7 @@ const FloatingNav = ({ columns, tasks, activeColumnIndex, onNavigate }) => {
               key={column.id}
               type="button"
               onClick={() => onNavigate(index)}
-              className="group relative flex flex-col items-center gap-2 transition-all cursor-pointer"
+              className="group relative flex flex-col items-center gap-1.5 sm:gap-2 transition-all cursor-pointer active:scale-95"
               title={column.title}
             >
               {/* Dot + Hafif parıltı  */}
@@ -66,8 +66,8 @@ const FloatingNav = ({ columns, tasks, activeColumnIndex, onNavigate }) => {
                   className={cn(
                     "rounded-full transition-all duration-300",
                     isActive 
-                      ? cn("w-3 h-3 ring-4 shadow-lg shadow-current/40", theme.dot, theme.ring)
-                      : cn("w-2.5 h-2.5 opacity-40 group-hover:opacity-100 group-hover:scale-110", theme.dot, theme.hover)
+                      ? cn("w-2.5 sm:w-3 h-2.5 sm:h-3 ring-3 sm:ring-4 shadow-lg shadow-current/40", theme.dot, theme.ring)
+                      : cn("w-2 sm:w-2.5 h-2 sm:h-2.5 opacity-40 group-hover:opacity-100 group-hover:scale-110", theme.dot, theme.hover)
                   )}
                 />
                 {/* Parıltı efekti */}
@@ -78,7 +78,7 @@ const FloatingNav = ({ columns, tasks, activeColumnIndex, onNavigate }) => {
 
               {/* Görev Sayısı */}
               <div className={cn(
-                "text-xs font-bold transition-all duration-300",
+                "text-[10px] sm:text-xs font-bold transition-all duration-300",
                 isActive 
                   ? cn("opacity-100 scale-100", theme.text)
                   : "opacity-0 group-hover:opacity-100 scale-75 group-hover:scale-100 text-stone-500 dark:text-neutral-400"
@@ -87,7 +87,7 @@ const FloatingNav = ({ columns, tasks, activeColumnIndex, onNavigate }) => {
               </div>
 
               {/* Başlık Tooltip */}
-              <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-stone-800 dark:bg-neutral-700 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+              <div className="absolute -top-8 sm:-top-10 left-1/2 -translate-x-1/2 px-2 sm:px-3 py-1 sm:py-1.5 bg-stone-800 dark:bg-neutral-700 text-white text-[10px] sm:text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
                 {column.title}
                 <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-stone-800 dark:bg-neutral-700 rotate-45" />
               </div>

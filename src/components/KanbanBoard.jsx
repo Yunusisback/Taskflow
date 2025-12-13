@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState, useEffect, useCallback } from "react";
 import ColumnContainer from "./ColumnContainer";
-import { Plus, Download, Moon, Sun, Leaf } from "lucide-react"; 
+import { Plus, Download, Moon, Sun, Leaf } from "lucide-react";
 import {
   DndContext,
   DragOverlay,
@@ -8,7 +8,7 @@ import {
   useSensor,
   useSensors,
   closestCorners,
-  MeasuringStrategy  
+  MeasuringStrategy
 } from "@dnd-kit/core";
 import { SortableContext, arrayMove } from "@dnd-kit/sortable";
 import { createPortal } from "react-dom";
@@ -25,6 +25,8 @@ const KanbanBoard = ({ darkMode, toggleTheme }) => {
   const itemsRef = useRef([]);
   const isManualScroll = useRef(false);
   const scrollTimeout = useRef(null);
+  const autoScrollInterval = useRef(null);
+  const edgeScrollSpeed = useRef(0);
 
   const {
     columns,
@@ -34,14 +36,30 @@ const KanbanBoard = ({ darkMode, toggleTheme }) => {
     trash,
     createNewColumn,
     createTask,
-    updateColumn,
     deleteColumn,
     deleteTask,
     updateTask,
-    moveTask, 
+    moveTask,
     restoreItem,
     deletePermanently,
   } = useKanbanData();
+
+  // Sütun güncelleme fonksiyonu 
+  const updateColumn = useCallback((id, newTitle, color = null) => {
+
+   
+  // Sütunları güncelle
+    setColumns(cols => {
+      return cols.map(col => {
+        if (col.id !== id) return col;
+        return {
+          ...col,
+          title: newTitle,
+          color: color !== null ? color : col.color
+        };
+      });
+    });
+  }, [setColumns]);
 
   // Durum yönetimi
   const [isTrashOpen, setIsTrashOpen] = useState(false);
@@ -50,12 +68,22 @@ const KanbanBoard = ({ darkMode, toggleTheme }) => {
   const [activeCol, setActiveCol] = useState(null);
   const [activeTask, setActiveTask] = useState(null);
   const [activeColumnIndex, setActiveColumnIndex] = useState(0);
+  const [isDraggingTask, setIsDraggingTask] = useState(false);
 
   const columnsId = useMemo(() => columns.map(c => c.id), [columns]);
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 10 } }));
+  // DnD Sensörler
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+        delay: 100,
+        tolerance: 5
+      }
+    })
+  );
 
-  // Gözlemci  aktif sütunu belirleme
+  // Gözlemci  aktif sütunu belirleme
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -72,7 +100,7 @@ const KanbanBoard = ({ darkMode, toggleTheme }) => {
       },
       {
         root: scrollRef.current,
-        threshold: 0.6, 
+        threshold: 0.6,
       }
     );
 
@@ -83,32 +111,107 @@ const KanbanBoard = ({ darkMode, toggleTheme }) => {
     return () => observer.disconnect();
   }, [columns.length]);
 
- // Sütuna gitme fonksiyonu
+  // Sütuna gitme fonksiyonu 
   const navigateToColumn = useCallback((index) => {
-    if (scrollRef.current) {
-      isManualScroll.current = true;
-      setActiveColumnIndex(index);
+    if (!scrollRef.current || !itemsRef.current[index]) return;
 
-   
-      const isMobile = window.innerWidth < 640;
-      const itemWidth = isMobile ? window.innerWidth - 32 : 344; 
-      
-      // Hesaplanan hedef kaydırma konumu
-      const targetScroll = index * itemWidth;
+    isManualScroll.current = true;
+    setActiveColumnIndex(index);
 
-      // Kaydırma işlemi
-      scrollRef.current.scrollTo({
-        left: targetScroll,
-        behavior: 'smooth'
-      });
+    // Hedef sütun elemanını al
+    const targetElement = itemsRef.current[index];
+    const container = scrollRef.current;
 
-         // Manuel kaydırma işlemi sona erdiğinde işaretleme
-      if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
-      scrollTimeout.current = setTimeout(() => {
-        isManualScroll.current = false;
-      }, 600);
-    }
+    // Elemanın container içindeki pozisyonunu hesapla
+    const elementLeft = targetElement.offsetLeft;
+    const containerWidth = container.offsetWidth;
+    const elementWidth = targetElement.offsetWidth;
+
+    // Elemanı ortaya getir 
+    const scrollPosition = elementLeft - (containerWidth / 2) + (elementWidth / 2);
+
+    // Kaydırma işlemi
+    container.scrollTo({
+      left: Math.max(0, scrollPosition),
+      behavior: 'smooth'
+    });
+
+    // Manuel kaydırma işlemi sona erdiğinde işaretleme
+    if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
+    scrollTimeout.current = setTimeout(() => {
+      isManualScroll.current = false;
+    }, 600);
   }, []);
+
+  //oto kenar scroll fonksiyonu 
+  const handleEdgeScroll = useCallback((e) => {
+    if (!scrollRef.current || !isDraggingTask) return;
+
+    const scrollContainer = scrollRef.current;
+    const containerRect = scrollContainer.getBoundingClientRect();
+    const pointerX = e.clientX || (e.touches && e.touches[0]?.clientX);
+
+    if (!pointerX) return;
+
+    // Kenar mesafesi 
+    const edgeSize = 100;
+    const scrollSpeed = 15;
+
+    // Sol kenara yakın
+    if (pointerX < containerRect.left + edgeSize) {
+      const distance = containerRect.left + edgeSize - pointerX;
+      edgeScrollSpeed.current = -(distance / edgeSize) * scrollSpeed;
+    }
+    // Sağ kenara yakın
+    else if (pointerX > containerRect.right - edgeSize) {
+      const distance = pointerX - (containerRect.right - edgeSize);
+      edgeScrollSpeed.current = (distance / edgeSize) * scrollSpeed;
+    }
+    // Ortada
+    else {
+      edgeScrollSpeed.current = 0;
+    }
+  }, [isDraggingTask]);
+
+  // Scroll animasyonu
+  useEffect(() => {
+    if (!isDraggingTask) {
+      edgeScrollSpeed.current = 0;
+      if (autoScrollInterval.current) {
+        cancelAnimationFrame(autoScrollInterval.current);
+        autoScrollInterval.current = null;
+      }
+      return;
+    }
+
+    const scroll = () => {
+      if (scrollRef.current && Math.abs(edgeScrollSpeed.current) > 0.1) {
+        scrollRef.current.scrollLeft += edgeScrollSpeed.current;
+      }
+      autoScrollInterval.current = requestAnimationFrame(scroll);
+    };
+
+    autoScrollInterval.current = requestAnimationFrame(scroll);
+
+    return () => {
+      if (autoScrollInterval.current) {
+        cancelAnimationFrame(autoScrollInterval.current);
+      }
+    };
+  }, [isDraggingTask]);
+
+  // Mouse -touch move event listener
+  useEffect(() => {
+    if (isDraggingTask) {
+      window.addEventListener('mousemove', handleEdgeScroll);
+      window.addEventListener('touchmove', handleEdgeScroll);
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleEdgeScroll);
+      window.removeEventListener('touchmove', handleEdgeScroll);
+    };
+  }, [isDraggingTask, handleEdgeScroll]);
 
   // Veri İndirme Fonksiyonu
   const download = () => {
@@ -117,18 +220,23 @@ const KanbanBoard = ({ darkMode, toggleTheme }) => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `kanban-${new Date().toISOString().slice(0,10)}.json`;
+    a.download = `kanban-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
 
   // Sürükleme Olayları
   const onDragStart = (e) => {
-    if (e.active.data.current?.type === "Column") setActiveCol(e.active.data.current.column);
-    if (e.active.data.current?.type === "Task") setActiveTask(e.active.data.current.task);
+    if (e.active.data.current?.type === "Column") {
+      setActiveCol(e.active.data.current.column);
+    }
+    if (e.active.data.current?.type === "Task") {
+      setActiveTask(e.active.data.current.task);
+      setIsDraggingTask(true);
+    }
   };
 
-  
+
   const onDragOver = (e) => {
     const { active, over } = e;
     if (!over || over.id === "TRASH_DROP_ZONE") return;
@@ -144,11 +252,22 @@ const KanbanBoard = ({ darkMode, toggleTheme }) => {
       }
       return arrayMove(tasks, activeIdx, overIdx >= 0 ? overIdx : activeIdx);
     });
+
+    // Hedef sütuna otomatik kaydır mobil için
+    if (window.innerWidth < 640 && over.data.current?.type === "Column") {
+      const targetColIndex = columns.findIndex(c => c.id === over.id);
+      if (targetColIndex !== -1 && targetColIndex !== activeColumnIndex) {
+        navigateToColumn(targetColIndex);
+      }
+    }
   };
 
   const onDragEnd = (e) => {
     setActiveCol(null);
     setActiveTask(null);
+    setIsDraggingTask(false);
+    edgeScrollSpeed.current = 0;
+
     const { active, over } = e;
     if (!over) return;
 
@@ -166,12 +285,23 @@ const KanbanBoard = ({ darkMode, toggleTheme }) => {
     }
   };
 
+  // cleanup
+  useEffect(() => {
+    return () => {
+      if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
+      if (autoScrollInterval.current) cancelAnimationFrame(autoScrollInterval.current);
+    };
+  }, []);
+
+  // Temel sütun ID lerini tanımla
+  const defaultColumnIds = useMemo(() => ["todo", "doing", "done"], []);
+
   return (
-    <DndContext 
-      sensors={sensors} 
-      collisionDetection={closestCorners} 
-      onDragStart={onDragStart} 
-      onDragOver={onDragOver} 
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCorners}
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
       onDragEnd={onDragEnd}
       measuring={{
         droppable: {
@@ -180,16 +310,28 @@ const KanbanBoard = ({ darkMode, toggleTheme }) => {
       }}
     >
       <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors duration-300">
-        
-        <div className="fixed inset-0 -z-10 bg-[linear-gradient(to_right,#0000000a_1px,transparent_1px),linear-gradient(to_bottom,#0000000a_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:24px_24px] sm:bg-[size:24px_24px]" />
-       
-         {/* Üst Başlık  */}
+
+        <div className="fixed inset-0 -z-10 bg-[linear-gradient(to_right,#0000000a_1px,transparent_1px),linear-gradient(to_bottom,#0000000a_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-size-[24px_24px] sm:bg-size-24px_24px" />
+
+        {/* Üst Başlık  */}
         <header className="fixed top-0 left-0 right-0 z-50 h-14 sm:h-16 border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md shadow-sm transition-colors duration-300 select-none">
           <div className="flex h-full items-center justify-between px-3 sm:px-6 md:px-8">
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="p-1.5 sm:p-2 bg-emerald-100 dark:bg-emerald-500/20 rounded-lg text-emerald-600 dark:text-emerald-400">
-                 <Leaf size={18} className="sm:w-5 sm:h-5 fill-current" />
+
+
+              <div className="w-9 h-9 sm:w-12 sm:h-11 flex items-center justify-center rounded-lg overflow-hidden ">
+                <video
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-full h-full object-cover"
+                  src="/logo.webm"
+                >
+                </video>
               </div>
+
+
               <h1 className="text-lg sm:text-2xl font-bold text-zinc-800 dark:text-zinc-100 tracking-tight">
                 Taskflow
               </h1>
@@ -205,21 +347,35 @@ const KanbanBoard = ({ darkMode, toggleTheme }) => {
               </button>
 
               <div className="h-9 sm:h-10 flex items-center">
-                 <TrashDropZone count={trash.length} onClick={() => setIsTrashOpen(true)} />
+                <TrashDropZone count={trash.length} onClick={() => setIsTrashOpen(true)} />
               </div>
-              
+
               <div className="h-5 sm:h-6 w-px bg-zinc-200 dark:bg-zinc-800 mx-0.5 sm:mx-1 hidden xs:block"></div>
 
-              <button 
-                  onClick={download} 
-                  className="flex cursor-pointer active:scale-95 items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-white dark:bg-zinc-800 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:border-emerald-300 dark:hover:border-emerald-700 border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all font-medium shadow-sm text-sm"
+              <button
+                onClick={download}
+                className="flex cursor-pointer active:scale-95 items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-white dark:bg-zinc-800 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:border-emerald-300 dark:hover:border-emerald-700 border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all font-medium shadow-sm text-sm"
               >
-                <Download size={16} className="sm:w-[18px] sm:h-[18px]" /> 
+                <Download size={16} className="sm:w-[18px] sm:h-[18px]" />
                 <span className="hidden sm:inline">Yedekle</span>
               </button>
             </div>
           </div>
         </header>
+
+        {/* Sürüklerken görsel feedback */}
+        {isDraggingTask && (
+          <div className="fixed top-20 left-1/2 -translate-x-1/2 z-40 px-4 py-2 bg-zinc-900/90 dark:bg-zinc-800/90 text-white text-sm rounded-full backdrop-blur-md shadow-lg animate-in fade-in slide-in-from-top-2 sm:hidden">
+            <div className="flex items-center gap-2">
+              <div className="flex gap-1">
+                <div className="w-1 h-1 bg-white rounded-full animate-bounce" />
+                <div className="w-1 h-1 bg-white rounded-full animate-bounce delay-75" />
+                <div className="w-1 h-1 bg-white rounded-full animate-bounce delay-150" />
+              </div>
+              <span>Kenara doğru sürükle</span>
+            </div>
+          </div>
+        )}
 
         <ConfirmModal
           isOpen={isConfirmOpen}
@@ -232,27 +388,28 @@ const KanbanBoard = ({ darkMode, toggleTheme }) => {
           title="Silinsin mi?"
           message={itemToDelete?.type === "Column" ? `"${itemToDelete.column.title}" ve içindekiler çöpe gitsin mi?` : "Bu görev çöpe gitsin mi?"}
         />
-        
+
         <Trash isOpen={isTrashOpen} onClose={() => setIsTrashOpen(false)} trashItems={trash} restoreItem={restoreItem} deletePermanently={deletePermanently} />
-        
-        <FloatingNav 
+
+        <FloatingNav
           columns={columns}
           tasks={tasks}
           activeColumnIndex={activeColumnIndex}
           onNavigate={navigateToColumn}
         />
-          {/* Sütunlar  */}
-        <div 
-          ref={scrollRef} 
+        {/* Sütunlar  */}
+        <div
+          ref={scrollRef}
           className="flex h-screen gap-4 sm:gap-6 overflow-x-auto px-4 sm:px-6 md:px-9 pt-16 sm:pt-20 pb-20 sm:pb-8 snap-x snap-mandatory [&::-webkit-scrollbar]:h-1 sm:[&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:bg-zinc-300 dark:[&::-webkit-scrollbar-thumb]:bg-zinc-700 [&::-webkit-scrollbar-track]:bg-transparent scroll-smooth"
         >
           <SortableContext items={columnsId}>
             {columns.map((col, index) => (
-              <div 
-                key={col.id} 
+              <div
+                key={col.id}
                 ref={el => itemsRef.current[index] = el}
                 className="snap-center shrink-0"
               >
+
                 <ColumnContainer
                   column={col}
                   tasks={tasks.filter(t => t.columnId === col.id)}
@@ -261,7 +418,8 @@ const KanbanBoard = ({ darkMode, toggleTheme }) => {
                   deleteColumn={deleteColumn}
                   deleteTask={deleteTask}
                   updateTask={updateTask}
-                  moveTask={moveTask} 
+                  moveTask={moveTask}
+                  disableColorChange={defaultColumnIds.includes(col.id)}
                 />
               </div>
             ))}
@@ -280,30 +438,31 @@ const KanbanBoard = ({ darkMode, toggleTheme }) => {
           </div>
         </div>
 
-       
+
         {createPortal(
-          <div className={darkMode ? "dark" : ""}> 
+          <div className={darkMode ? "dark" : ""}>
             <DragOverlay dropAnimation={null}>
               {activeCol && (
-                <ColumnContainer 
-                  column={activeCol} 
-                  tasks={tasks.filter(t => t.columnId === activeCol.id)} 
-                  createTask={()=>{}} 
-                  updateColumn={()=>{}} 
-                  deleteColumn={()=>{}} 
-                  deleteTask={()=>{}} 
-                  updateTask={()=>{}}
-                  moveTask={()=>{}} 
-                  isOverlay={true} 
+                <ColumnContainer
+                  column={activeCol}
+                  tasks={tasks.filter(t => t.columnId === activeCol.id)}
+                  createTask={() => { }}
+                  updateColumn={() => { }}
+                  deleteColumn={() => { }}
+                  deleteTask={() => { }}
+                  updateTask={() => { }}
+                  moveTask={() => { }}
+                  isOverlay={true}
+                  disableColorChange={defaultColumnIds.includes(activeCol.id)}
                 />
               )}
               {activeTask && (
-                <TaskCard 
-                  task={activeTask} 
+                <TaskCard
+                  task={activeTask}
                   isOverlay={true}
-                  deleteTask={()=>{}} 
-                  updateTask={()=>{}}
-                  moveTask={()=>{}} 
+                  deleteTask={() => { }}
+                  updateTask={() => { }}
+                  moveTask={() => { }}
                 />
               )}
             </DragOverlay>

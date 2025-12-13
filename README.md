@@ -7,3 +7,4 @@ This is my first project built entirely on Drag-and-Drop architecture. It goes b
 A high-performance, fully interactive Kanban Board built with **React 19** and **@dnd-kit**.
 
 
+**The project is under development.**

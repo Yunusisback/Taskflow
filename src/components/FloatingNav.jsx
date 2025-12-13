@@ -19,81 +19,104 @@ const FloatingNav = ({ columns, tasks, activeColumnIndex, onNavigate }) => {
   // Sütun temasına göre renk ayarları (dark modda daha canlı)
   const getColorTheme = (columnId) => {
     if (columnId === 'todo') return {
-      dot: 'bg-blue-500 dark:bg-blue-500',
-      ring: 'ring-blue-500/30 dark:ring-blue-500/40',
+      dot: 'bg-blue-500',
+      activeDot: 'bg-blue-500 shadow-lg shadow-blue-500/50',
+      ring: 'ring-blue-400/30',
       text: 'text-blue-600 dark:text-blue-400',
-      hover: 'hover:bg-blue-500 dark:hover:bg-blue-500'
     };
     if (columnId === 'doing') return {
-      dot: 'bg-amber-500 dark:bg-amber-500',
-      ring: 'ring-amber-500/30 dark:ring-amber-500/40',
+      dot: 'bg-amber-500',
+      activeDot: 'bg-amber-500 shadow-lg shadow-amber-500/50',
+      ring: 'ring-amber-400/30',
       text: 'text-amber-600 dark:text-amber-400',
-      hover: 'hover:bg-amber-500 dark:hover:bg-amber-500'
     };
     if (columnId === 'done') return {
-      dot: 'bg-emerald-500 dark:bg-emerald-500',
-      ring: 'ring-emerald-500/30 dark:ring-emerald-500/40',
+      dot: 'bg-emerald-500',
+      activeDot: 'bg-emerald-500 shadow-lg shadow-emerald-500/50',
+      ring: 'ring-emerald-400/30',
       text: 'text-emerald-600 dark:text-emerald-400',
-      hover: 'hover:bg-emerald-500 dark:hover:bg-emerald-500'
     };
     return {
-      dot: 'bg-stone-400 dark:bg-neutral-400',
-      ring: 'ring-stone-400/30 dark:ring-neutral-400/40',
-      text: 'text-stone-600 dark:text-neutral-300',
-      hover: 'hover:bg-stone-400 dark:hover:bg-neutral-400'
+      dot: 'bg-zinc-400 dark:bg-neutral-500',
+      activeDot: 'bg-zinc-500 dark:bg-neutral-400 shadow-lg shadow-zinc-500/40',
+      ring: 'ring-zinc-400/30',
+      text: 'text-zinc-600 dark:text-neutral-400',
     };
   };
 
   return (
-    <div className="fixed bottom-2 sm:bottom-3 left-1/2 -translate-x-1/2 z-40 select-none">
-      <div className="flex items-center gap-2.5 sm:gap-4 px-4 sm:px-6 py-2 sm:py-3 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl rounded-full border border-stone-200/50 dark:border-neutral-700/50 shadow-lg shadow-stone-900/5 dark:shadow-black/20">
-        {columns.map((column, index) => {
-          const theme = getColorTheme(column.id);
-          const taskCount = getTaskCount(column.id);
-          const isActive = index === activeColumnIndex;
+    <div className="fixed bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-40 select-none pointer-events-none">
+   
+      <div className="relative group">
 
-          return (
-            <button
-              key={column.id}
-              type="button"
-              onClick={() => onNavigate(index)}
-              className="group relative flex flex-col items-center gap-1.5 sm:gap-2 transition-all cursor-pointer active:scale-95"
-              title={column.title}
-            >
-              {/* Dot + Hafif parıltı  */}
-              <div className="relative">
-                <div
-                  className={cn(
-                    "rounded-full transition-all duration-300",
-                    isActive 
-                      ? cn("w-2.5 sm:w-3 h-2.5 sm:h-3 ring-3 sm:ring-4 shadow-lg shadow-current/40", theme.dot, theme.ring)
-                      : cn("w-2 sm:w-2.5 h-2 sm:h-2.5 opacity-40 group-hover:opacity-100 group-hover:scale-110", theme.dot, theme.hover)
+ 
+        <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500/20 via-amber-500/20 to-emerald-500/20 rounded-full blur opacity-30 group-hover:opacity-50 transition duration-500" />
+        
+        {/* Main container  */}
+        <div className="relative flex items-center gap-3 sm:gap-4 px-5 sm:px-7 py-2.5 sm:py-3 bg-white/10 dark:bg-black/10 backdrop-blur-2xl rounded-full border border-white/20 dark:border-white/10 shadow-2xl pointer-events-auto">
+          
+          {columns.map((column, index) => {
+            const theme = getColorTheme(column.id);
+            const taskCount = getTaskCount(column.id);
+            const isActive = index === activeColumnIndex;
+
+            return (
+              <button
+                key={column.id}
+                type="button"
+                onClick={() => onNavigate(index)}
+                className="group/btn relative flex flex-col items-center gap-1 transition-all cursor-pointer active:scale-95 hover:scale-110"
+                title={column.title}
+              >
+                {/* dot containner */}
+                <div className="relative flex items-center justify-center">
+
+                  {/* active ring */}
+                  {isActive && (
+                    <div className={cn(
+                      "absolute inset-0 rounded-full ring-4 animate-pulse",
+                      theme.ring
+                    )} />
                   )}
-                />
-                {/* Parıltı efekti */}
-                {isActive && (
-                  <div className="absolute inset-0 rounded-full animate-ping bg-current opacity-30" />
-                )}
-              </div>
+                  
+                  {/* dot */}
+                  <div
+                    className={cn(
+                      "rounded-full transition-all duration-300",
+                      isActive 
+                        ? cn("w-3 h-3 sm:w-3.5 sm:h-3.5", theme.activeDot)
+                        : cn("w-2 h-2 sm:w-2.5 sm:h-2.5 opacity-50 group-hover/btn:opacity-100", theme.dot)
+                    )}
+                  />
+                  
+                  {/* pulse effect */}
+                  {isActive && (
+                    <div className={cn(
+                      "absolute inset-0 rounded-full animate-ping opacity-75",
+                      theme.dot
+                    )} />
+                  )}
+                </div>
 
-              {/* Görev Sayısı */}
-              <div className={cn(
-                "text-[10px] sm:text-xs font-bold transition-all duration-300",
-                isActive 
-                  ? cn("opacity-100 scale-100", theme.text)
-                  : "opacity-0 group-hover:opacity-100 scale-75 group-hover:scale-100 text-stone-500 dark:text-neutral-400"
-              )}>
-                {taskCount}
-              </div>
+                {/* Görev sayısı */}
+                <div className={cn(
+                  "text-xs sm:text-sm font-bold transition-all duration-300 tabular-nums",
+                  isActive 
+                    ? cn("opacity-100 scale-100", theme.text)
+                    : "opacity-60 group-hover/btn:opacity-100 text-zinc-700 dark:text-neutral-300"
+                )}>
+                  {taskCount}
+                </div>
 
-              {/* Başlık Tooltip */}
-              <div className="absolute -top-8 sm:-top-10 left-1/2 -translate-x-1/2 px-2 sm:px-3 py-1 sm:py-1.5 bg-stone-800 dark:bg-neutral-700 text-white text-[10px] sm:text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                {column.title}
-                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-stone-800 dark:bg-neutral-700 rotate-45" />
-              </div>
-            </button>
-          );
-        })}
+                 {/*  Sütun başlığı hover efekti */}
+                <div className="absolute -top-10 sm:-top-12 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-zinc-900/90 dark:bg-zinc-800/90 backdrop-blur-xl text-white text-xs rounded-lg opacity-0 group-hover/btn:opacity-100 transition-all duration-200 whitespace-nowrap pointer-events-none shadow-xl scale-95 group-hover/btn:scale-100">
+                  {column.title}
+                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-zinc-900/90 dark:bg-zinc-800/90 rotate-45" />
+                </div>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

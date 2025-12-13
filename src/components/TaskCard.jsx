@@ -1,5 +1,5 @@
-import { useState, useMemo, memo } from "react";
-import { GripVertical, Trash2, ArrowRight, Check, MoreVertical } from "lucide-react"; 
+import { useState, useMemo, memo, useEffect, useRef } from "react";
+import { GripVertical, Trash2, ArrowRight, Check, MoreVertical, Calendar, Type } from "lucide-react"; 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { cn } from "../lib/utils";
@@ -9,6 +9,35 @@ const TaskCard = ({ task, columnTheme, updateTask, deleteTask, moveTask, isOverl
   const [mouseIsOver, setMouseIsOver] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const textareaRef = useRef(null);  
+  
+  //  Karakter limiti kontrolü
+  const MAX_CHARS = 500;
+  const remainingChars = MAX_CHARS - (task.content?.length || 0);
+  const isNearLimit = remainingChars < 50;
+  
+  // Son düzenleme tarihi gösterimi
+  const lastEdited = useMemo(() => {
+    if (task.lastEdited) {
+      const date = new Date(task.lastEdited);
+      const now = new Date();
+      const diffMs = now - date;
+      const diffMins = Math.floor(diffMs / 60000);
+      
+      // Zaman farkına göre gösterim
+      if (diffMins < 1) return "Az önce";
+      if (diffMins < 60) return `${diffMins} dk önce`;
+      if (diffMins < 1440) return `${Math.floor(diffMins / 60)} saat önce`;
+      
+      return date.toLocaleDateString('tr-TR', { 
+        day: 'numeric', 
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+    return null;
+  }, [task.lastEdited]);
   
 // Dinamik hover rengi belirleme
   const ringColor = useMemo(() => {
@@ -53,6 +82,15 @@ const TaskCard = ({ task, columnTheme, updateTask, deleteTask, moveTask, isOverl
     setMouseIsOver(false);
   };
 
+  // Textarea focus yönetimi
+  useEffect(() => {
+    if (editMode && textareaRef.current) {
+      textareaRef.current.focus();
+      const length = textareaRef.current.value.length;
+      textareaRef.current.setSelectionRange(length, length);
+    }
+  }, [editMode]);
+
   if (isDragging && !isOverlay) {
     return (
       <div
@@ -85,29 +123,46 @@ const TaskCard = ({ task, columnTheme, updateTask, deleteTask, moveTask, isOverl
       onTouchEnd={() => setTimeout(() => setMouseIsOver(false), 2000)}
     >
       {editMode ? (
-        <textarea
-          className={cn(
-            "h-full w-full resize-none bg-transparent text-sm text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-300 dark:placeholder:text-zinc-600 placeholder:italic focus:outline-none",
-            "[&::-webkit-scrollbar]:w-1.5",
-            "[&::-webkit-scrollbar-track]:bg-transparent",
-            "[&::-webkit-scrollbar-thumb]:rounded-full",
-            "[&::-webkit-scrollbar-thumb]:transition-colors",
-            scrollbarColor,
-            "[&::-webkit-scrollbar-thumb]:hover:brightness-90"
-          )}
-          value={task.content}
-          autoFocus
-          placeholder="Not yazın..."
-          onClick={(e) => e.stopPropagation()}
-          onBlur={toggleEditMode}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              toggleEditMode();
-            }
-          }}
-          onChange={(e) => updateTask(task.id, e.target.value)}
-        />
+        <div className="relative space-y-2"> 
+          <textarea
+            ref={textareaRef} 
+            className={cn(
+              "h-full w-full resize-none bg-transparent text-sm text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-300 dark:placeholder:text-zinc-600 placeholder:italic focus:outline-none min-h-16",
+              "[&::-webkit-scrollbar]:w-1.5",
+              "[&::-webkit-scrollbar-track]:bg-transparent",
+              "[&::-webkit-scrollbar-thumb]:rounded-full",
+              "[&::-webkit-scrollbar-thumb]:transition-colors",
+              scrollbarColor,
+              "[&::-webkit-scrollbar-thumb]:hover:brightness-90"
+            )}
+            value={task.content}
+            maxLength={MAX_CHARS} 
+            autoFocus
+            placeholder="Not yazın..."
+            onClick={(e) => e.stopPropagation()}
+            onBlur={toggleEditMode}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                toggleEditMode();
+              }
+            }}
+            onChange={(e) => updateTask(task.id, e.target.value)}
+          />
+          
+          {/* Karakter sayacı */}
+          <div className={cn(
+            "flex items-center gap-1.5 text-xs transition-colors",
+            isNearLimit 
+              ? "text-rose-500 dark:text-rose-400" 
+              : "text-zinc-400 dark:text-zinc-500"
+          )}>
+            <Type size={12} />
+            <span className="font-medium">
+              {remainingChars} karakter kaldı
+            </span>
+          </div>
+        </div>
       ) : (
         <>
           {/* Hover ile scrollable metin alanı */}
@@ -126,16 +181,26 @@ const TaskCard = ({ task, columnTheme, updateTask, deleteTask, moveTask, isOverl
           </div>
 
           {/* Statik metin alanı */}
-          <p className={cn(
-            "absolute inset-x-2.5 top-2.5 text-sm text-zinc-700 dark:text-zinc-200 whitespace-pre-wrap leading-relaxed break-all pointer-events-none",
+          <div className={cn(
+            "absolute inset-x-2.5 top-2.5 text-sm text-zinc-700 dark:text-zinc-200 pointer-events-none",
             mouseIsOver ? "opacity-0" : "opacity-100"
           )}>
-            {task.content}
-          </p>
+            <p className="whitespace-pre-wrap leading-relaxed break-all line-clamp-2">
+              {task.content}
+            </p>
+            
+            {/*Son düzenleme tarihi  */}
+            {lastEdited && (
+              <div className="flex items-center gap-1 text-[10px] text-zinc-400 dark:text-zinc-500 mt-1.5">
+                <Calendar size={10} />
+                <span>{lastEdited}</span>
+              </div>
+            )}
+          </div>
           
           {/* Görev İşlem Butonları */}
           <div className={cn(
-            "flex items-center justify-between mt-2 transition-opacity",
+            "flex items-center justify-between mt-auto pt-1.5 transition-opacity",
             mouseIsOver || isOverlay ? "opacity-100" : "opacity-0"
           )}>
              <div className="text-zinc-300 dark:text-zinc-600">

@@ -1,6 +1,6 @@
 import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { useKanbanData } from '../../hooks/useKanbanData';
+import { useKanbanData } from './useKanbanData';
 
 describe('useKanbanData Hook', () => {
   

@@ -2,8 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import ColumnContainer from '../../components/ColumnContainer';
 
-
-// dnd-kit hook'larını mockluyoruz çünkü bu unit testte sürükle-bırak motorunu test etmiyoruz
+// dnd-kit hooklarını mockluyoruz çünkü bu  testte sürükle bırak motorunu test etmiyoruz
 const mockUseSortable = vi.fn();
 vi.mock('@dnd-kit/sortable', () => ({
   useSortable: (args) => mockUseSortable(args),
@@ -16,9 +15,37 @@ vi.mock('../../components/TaskCard', () => ({
   default: ({ task }) => <div data-testid="task-card">{task.content}</div>,
 }));
 
+// ColumnColorPicker mock
+vi.mock('../../components/ColumnColorPicker', () => ({
+  default: ({ show, onColorChange }) => 
+    show ? <div data-testid="color-picker" onClick={() => onColorChange('blue')}>ColorPicker</div> : null,
+}));
+
 // dnd-kit utilities mock
 vi.mock('@dnd-kit/utilities', () => ({
   CSS: { Transform: { toString: () => '' } },
+}));
+
+// columnColors mock
+vi.mock('../../constants/columnColors', () => ({
+  colorVariants: {
+    blue: {
+      bg: "bg-zinc-50",
+      headerBg: "bg-blue-500",
+      border: "border-blue-300",
+      text: "text-white",
+      accent: "bg-white/20",
+      buttonHover: "hover:bg-white/20",
+    },
+    zinc: {
+      bg: "bg-zinc-50",
+      headerBg: "bg-zinc-500",
+      border: "border-zinc-200",
+      text: "text-white",
+      accent: "bg-white/20",
+      buttonHover: "hover:bg-white/20",
+    },
+  },
 }));
 
 describe('ColumnContainer Component', () => {
@@ -27,10 +54,12 @@ describe('ColumnContainer Component', () => {
   const mockUpdateColumn = vi.fn();
   const mockCreateTask = vi.fn();
   const mockUpdateTask = vi.fn();
+  const mockDeleteTask = vi.fn();
+  const mockMoveTask = vi.fn();
 
   // Varsayılan props
   const defaultProps = {
-    column: { id: 'col1', title: 'Test Sütunu' },
+    column: { id: 'col1', title: 'Test Sütunu', color: 'blue' },
     tasks: [
       { id: 't1', content: 'Görev 1', columnId: 'col1' },
       { id: 't2', content: 'Görev 2', columnId: 'col1' },
@@ -39,6 +68,9 @@ describe('ColumnContainer Component', () => {
     updateColumn: mockUpdateColumn,
     createTask: mockCreateTask,
     updateTask: mockUpdateTask,
+    deleteTask: mockDeleteTask,
+    moveTask: mockMoveTask,
+    disableColorChange: false,
   };
 
   beforeEach(() => {
@@ -62,7 +94,7 @@ describe('ColumnContainer Component', () => {
     expect(screen.getByText('Test Sütunu')).toBeInTheDocument();
 
     // Görev sayısı (badge) kontrolü
-    expect(screen.getByText('2')).toBeInTheDocument();
+    expect(screen.getByText('2 görev')).toBeInTheDocument();
   });
 
   it('görevleri (TaskCard) listelemeli', () => {
@@ -92,27 +124,24 @@ describe('ColumnContainer Component', () => {
   });
 
   it('varsayılan sütunlarda (todo, doing, done) silme butonu GÖSTERMEMELİ', () => {
-    const todoProps = { ...defaultProps, column: { id: 'todo', title: 'Yapılacaklar' } };
+    const todoProps = { 
+      ...defaultProps, 
+      column: { id: 'todo', title: 'Yapılacaklar', color: 'blue' },
+      disableColorChange: true
+    };
     render(<ColumnContainer {...todoProps} />);
 
-    
-    // Edit butonu vardır
-    const buttons = screen.getAllByRole('button');
-
-    // 1  Edit 2  Yeni Görev Ekle. Toplam 2 buton olmalı (Silme yok)
-    expect(buttons.length).toBe(2); 
+    // Silme butonu olmamalı
+    expect(screen.queryByTitle('Sil')).not.toBeInTheDocument();
   });
 
   it('özel sütunlarda silme butonuna basınca deleteColumn fonksiyonunu çağırmalı', () => {
     render(<ColumnContainer {...defaultProps} />); // id="col1" (özel sütun)
 
-   // Silme butonuna tıkla
-    const buttons = screen.getAllByRole('button');
-
-  // Buton sıralaması: [0: Edit, 1: Delete, 2: Yeni Görev Ekle]
-    const deleteButton = buttons[1]; 
-    
+    // Silme butonuna tıkla
+    const deleteButton = screen.getByTitle('Sil');
     fireEvent.click(deleteButton);
+    
     expect(mockDeleteColumn).toHaveBeenCalledWith('col1');
   });
 
@@ -120,7 +149,7 @@ describe('ColumnContainer Component', () => {
     render(<ColumnContainer {...defaultProps} />);
 
     // Düzenle butonuna tıkla
-    const editButton = screen.getAllByRole('button')[0]; // İlk buton edit
+    const editButton = screen.getByTitle('Düzenle');
     fireEvent.click(editButton);
 
     // Input alanı gelmeli
@@ -133,7 +162,31 @@ describe('ColumnContainer Component', () => {
     // Blur (odaktan çıkma) ile kaydet
     fireEvent.blur(input);
 
-    expect(mockUpdateColumn).toHaveBeenCalledWith('col1', 'Yeni Başlık');
+    expect(mockUpdateColumn).toHaveBeenCalledWith('col1', 'Yeni Başlık', 'blue');
+  });
+
+  it('renk değiştirici gösterilip kullanılabilmeli (disableColorChange=false)', () => {
+    render(<ColumnContainer {...defaultProps} />);
+
+    // Renk butonu olmalı
+    const colorButton = screen.getByTitle('Renk Değiştir');
+    expect(colorButton).toBeInTheDocument();
+
+    // Tıklayınca picker açılmalı
+    fireEvent.click(colorButton);
+    expect(screen.getByTestId('color-picker')).toBeInTheDocument();
+  });
+
+  it('varsayılan sütunlarda renk değiştirici gizlenmeli (disableColorChange=true)', () => {
+    const todoProps = {
+      ...defaultProps,
+      column: { id: 'todo', title: 'Yapılacaklar', color: 'blue' },
+      disableColorChange: true,
+    };
+    render(<ColumnContainer {...todoProps} />);
+
+    // Renk butonu olmamalı
+    expect(screen.queryByTitle('Renk Değiştir')).not.toBeInTheDocument();
   });
 
   it('sürüklenme (dragging) esnasında farklı bir görünüm render etmeli', () => {
@@ -149,7 +202,6 @@ describe('ColumnContainer Component', () => {
 
     const { container } = render(<ColumnContainer {...defaultProps} />);
 
-   
     // Sürüklenme sırasında render edilen placeholder kontrolü
     const dragPlaceholder = container.firstChild;
     expect(dragPlaceholder).toHaveClass('opacity-50');

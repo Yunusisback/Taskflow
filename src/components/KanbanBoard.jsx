@@ -1,6 +1,6 @@
-import { useMemo, useRef, useState, useEffect, useCallback } from "react";
+import { useMemo, useState, useCallback } from "react";
 import ColumnContainer from "./ColumnContainer";
-import { Plus, Download, Moon, Sun, Leaf } from "lucide-react";
+import { Plus, Download, Moon, Sun } from "lucide-react";
 import {
   DndContext,
   DragOverlay,
@@ -18,16 +18,10 @@ import Trash from "./Trash";
 import ConfirmModal from "./ConfirmModal";
 import FloatingNav from "./FloatingNav";
 import { useKanbanData } from "../hooks/useKanbanData";
-
+import { useScrollNavigation } from "../hooks/useScrollNavigation";
+import { useEdgeScroll } from "../hooks/useEdgeScroll";
 
 const KanbanBoard = ({ darkMode, toggleTheme }) => {
-  const scrollRef = useRef(null);
-  const itemsRef = useRef([]);
-  const isManualScroll = useRef(false);
-  const scrollTimeout = useRef(null);
-  const autoScrollInterval = useRef(null);
-  const edgeScrollSpeed = useRef(0);
-
   const {
     columns,
     setColumns,
@@ -46,9 +40,7 @@ const KanbanBoard = ({ darkMode, toggleTheme }) => {
 
   // Sütun güncelleme fonksiyonu 
   const updateColumn = useCallback((id, newTitle, color = null) => {
-
-   
-  // Sütunları güncelle
+    // Sütunları güncelle
     setColumns(cols => {
       return cols.map(col => {
         if (col.id !== id) return col;
@@ -67,10 +59,15 @@ const KanbanBoard = ({ darkMode, toggleTheme }) => {
   const [itemToDelete, setItemToDelete] = useState(null);
   const [activeCol, setActiveCol] = useState(null);
   const [activeTask, setActiveTask] = useState(null);
-  const [activeColumnIndex, setActiveColumnIndex] = useState(0);
   const [isDraggingTask, setIsDraggingTask] = useState(false);
 
   const columnsId = useMemo(() => columns.map(c => c.id), [columns]);
+
+  // Scroll ve navigasyon
+  const { scrollRef, itemsRef, activeColumnIndex, navigateToColumn } = useScrollNavigation(columns.length);
+  
+  // Kenar scroll
+  useEdgeScroll(scrollRef, isDraggingTask);
 
   // DnD Sensörler
   const sensors = useSensors(
@@ -82,136 +79,6 @@ const KanbanBoard = ({ darkMode, toggleTheme }) => {
       }
     })
   );
-
-  // Gözlemci  aktif sütunu belirleme
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (isManualScroll.current) return;
-
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const index = itemsRef.current.indexOf(entry.target);
-            if (index !== -1) {
-              setActiveColumnIndex(index);
-            }
-          }
-        });
-      },
-      {
-        root: scrollRef.current,
-        threshold: 0.6,
-      }
-    );
-
-    itemsRef.current.forEach((el) => {
-      if (el) observer.observe(el);
-    });
-
-    return () => observer.disconnect();
-  }, [columns.length]);
-
-  // Sütuna gitme fonksiyonu 
-  const navigateToColumn = useCallback((index) => {
-    if (!scrollRef.current || !itemsRef.current[index]) return;
-
-    isManualScroll.current = true;
-    setActiveColumnIndex(index);
-
-    // Hedef sütun elemanını al
-    const targetElement = itemsRef.current[index];
-    const container = scrollRef.current;
-
-    // Elemanın container içindeki pozisyonunu hesapla
-    const elementLeft = targetElement.offsetLeft;
-    const containerWidth = container.offsetWidth;
-    const elementWidth = targetElement.offsetWidth;
-
-    // Elemanı ortaya getir 
-    const scrollPosition = elementLeft - (containerWidth / 2) + (elementWidth / 2);
-
-    // Kaydırma işlemi
-    container.scrollTo({
-      left: Math.max(0, scrollPosition),
-      behavior: 'smooth'
-    });
-
-    // Manuel kaydırma işlemi sona erdiğinde işaretleme
-    if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
-    scrollTimeout.current = setTimeout(() => {
-      isManualScroll.current = false;
-    }, 600);
-  }, []);
-
-  //oto kenar scroll fonksiyonu 
-  const handleEdgeScroll = useCallback((e) => {
-    if (!scrollRef.current || !isDraggingTask) return;
-
-    const scrollContainer = scrollRef.current;
-    const containerRect = scrollContainer.getBoundingClientRect();
-    const pointerX = e.clientX || (e.touches && e.touches[0]?.clientX);
-
-    if (!pointerX) return;
-
-    // Kenar mesafesi 
-    const edgeSize = 100;
-    const scrollSpeed = 15;
-
-    // Sol kenara yakın
-    if (pointerX < containerRect.left + edgeSize) {
-      const distance = containerRect.left + edgeSize - pointerX;
-      edgeScrollSpeed.current = -(distance / edgeSize) * scrollSpeed;
-    }
-    // Sağ kenara yakın
-    else if (pointerX > containerRect.right - edgeSize) {
-      const distance = pointerX - (containerRect.right - edgeSize);
-      edgeScrollSpeed.current = (distance / edgeSize) * scrollSpeed;
-    }
-    // Ortada
-    else {
-      edgeScrollSpeed.current = 0;
-    }
-  }, [isDraggingTask]);
-
-  // Scroll animasyonu
-  useEffect(() => {
-    if (!isDraggingTask) {
-      edgeScrollSpeed.current = 0;
-      if (autoScrollInterval.current) {
-        cancelAnimationFrame(autoScrollInterval.current);
-        autoScrollInterval.current = null;
-      }
-      return;
-    }
-
-    const scroll = () => {
-      if (scrollRef.current && Math.abs(edgeScrollSpeed.current) > 0.1) {
-        scrollRef.current.scrollLeft += edgeScrollSpeed.current;
-      }
-      autoScrollInterval.current = requestAnimationFrame(scroll);
-    };
-
-    autoScrollInterval.current = requestAnimationFrame(scroll);
-
-    return () => {
-      if (autoScrollInterval.current) {
-        cancelAnimationFrame(autoScrollInterval.current);
-      }
-    };
-  }, [isDraggingTask]);
-
-  // Mouse -touch move event listener
-  useEffect(() => {
-    if (isDraggingTask) {
-      window.addEventListener('mousemove', handleEdgeScroll);
-      window.addEventListener('touchmove', handleEdgeScroll);
-    }
-
-    return () => {
-      window.removeEventListener('mousemove', handleEdgeScroll);
-      window.removeEventListener('touchmove', handleEdgeScroll);
-    };
-  }, [isDraggingTask, handleEdgeScroll]);
 
   // Veri İndirme Fonksiyonu
   const download = () => {
@@ -235,7 +102,6 @@ const KanbanBoard = ({ darkMode, toggleTheme }) => {
       setIsDraggingTask(true);
     }
   };
-
 
   const onDragOver = (e) => {
     const { active, over } = e;
@@ -266,7 +132,6 @@ const KanbanBoard = ({ darkMode, toggleTheme }) => {
     setActiveCol(null);
     setActiveTask(null);
     setIsDraggingTask(false);
-    edgeScrollSpeed.current = 0;
 
     const { active, over } = e;
     if (!over) return;
@@ -285,14 +150,6 @@ const KanbanBoard = ({ darkMode, toggleTheme }) => {
     }
   };
 
-  // cleanup
-  useEffect(() => {
-    return () => {
-      if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
-      if (autoScrollInterval.current) cancelAnimationFrame(autoScrollInterval.current);
-    };
-  }, []);
-
   // Temel sütun ID lerini tanımla
   const defaultColumnIds = useMemo(() => ["todo", "doing", "done"], []);
 
@@ -310,15 +167,12 @@ const KanbanBoard = ({ darkMode, toggleTheme }) => {
       }}
     >
       <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors duration-300">
-
         <div className="fixed inset-0 -z-10 bg-[linear-gradient(to_right,#0000000a_1px,transparent_1px),linear-gradient(to_bottom,#0000000a_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-size-[24px_24px] sm:bg-size-24px_24px" />
 
-        {/* Üst Başlık  */}
+        {/* Üst Başlık  */}
         <header className="fixed top-0 left-0 right-0 z-50 h-14 sm:h-16 border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md shadow-sm transition-colors duration-300 select-none">
           <div className="flex h-full items-center justify-between px-3 sm:px-6 md:px-8">
             <div className="flex items-center gap-2 sm:gap-3">
-
-
               <div className="w-9 h-9 sm:w-12 sm:h-11 flex items-center justify-center rounded-lg overflow-hidden ">
                 <video
                   autoPlay
@@ -330,7 +184,6 @@ const KanbanBoard = ({ darkMode, toggleTheme }) => {
                 >
                 </video>
               </div>
-
 
               <h1 className="text-lg sm:text-2xl font-bold text-zinc-800 dark:text-zinc-100 tracking-tight">
                 Taskflow
@@ -397,7 +250,8 @@ const KanbanBoard = ({ darkMode, toggleTheme }) => {
           activeColumnIndex={activeColumnIndex}
           onNavigate={navigateToColumn}
         />
-        {/* Sütunlar  */}
+
+        {/* Sütunlar  */}
         <div
           ref={scrollRef}
           className="flex h-screen gap-4 sm:gap-6 overflow-x-auto px-4 sm:px-6 md:px-9 pt-16 sm:pt-20 pb-20 sm:pb-8 snap-x snap-mandatory [&::-webkit-scrollbar]:h-1 sm:[&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:bg-zinc-300 dark:[&::-webkit-scrollbar-thumb]:bg-zinc-700 [&::-webkit-scrollbar-track]:bg-transparent scroll-smooth"
@@ -409,7 +263,6 @@ const KanbanBoard = ({ darkMode, toggleTheme }) => {
                 ref={el => itemsRef.current[index] = el}
                 className="snap-center shrink-0"
               >
-
                 <ColumnContainer
                   column={col}
                   tasks={tasks.filter(t => t.columnId === col.id)}
@@ -437,7 +290,6 @@ const KanbanBoard = ({ darkMode, toggleTheme }) => {
             </button>
           </div>
         </div>
-
 
         {createPortal(
           <div className={darkMode ? "dark" : ""}>

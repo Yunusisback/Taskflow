@@ -1,10 +1,12 @@
 import { useMemo, useState, memo } from "react";
 import TaskCard from "./TaskCard";
+import ColumnColorPicker from "./ColumnColorPicker";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { Trash2, Plus, GripVertical, Pencil, Palette } from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { cn } from "../lib/utils";
+import { colorVariants } from "../constants/columnColors";
 
 // Sütun konteyneri bileşeni
 const ColumnContainer = ({
@@ -26,19 +28,6 @@ const ColumnContainer = ({
   // Görevlerin ID lerini hafızada tutarak performansı artırıyoruz
   const tasksIds = useMemo(() => tasks.map(t => t.id), [tasks]);
 
-  // kullanıcı renk paleti
-  const colorPalette = [
-    { id: 'blue', name: 'Mavi', bg: 'bg-blue-500', darkBg: 'dark:bg-blue-600' },
-    { id: 'amber', name: 'Turuncu', bg: 'bg-amber-500', darkBg: 'dark:bg-amber-600' },
-    { id: 'emerald', name: 'Yeşil', bg: 'bg-emerald-500', darkBg: 'dark:bg-emerald-600' },
-    { id: 'rose', name: 'Kırmızı', bg: 'bg-rose-500', darkBg: 'dark:bg-rose-600' },
-    { id: 'purple', name: 'Mor', bg: 'bg-purple-500', darkBg: 'dark:bg-purple-600' },
-    { id: 'pink', name: 'Pembe', bg: 'bg-pink-500', darkBg: 'dark:bg-pink-600' },
-    { id: 'cyan', name: 'Cyan', bg: 'bg-cyan-500', darkBg: 'dark:bg-cyan-600' },
-    { id: 'indigo', name: 'İndigo', bg: 'bg-indigo-500', darkBg: 'dark:bg-indigo-600' },
-    { id: 'zinc', name: 'Gri', bg: 'bg-zinc-500', darkBg: 'dark:bg-zinc-600' },
-  ];
-
   // Sütun rengi 
   const columnColor = useMemo(() => {
     if (column.id === 'todo') return 'blue';
@@ -47,92 +36,7 @@ const ColumnContainer = ({
     return column.color || 'zinc';
   }, [column.id, column.color]);
 
-  // Renk teması dinamik
-  const variants = {
-    zinc: {
-      bg: "bg-zinc-50 dark:bg-zinc-900/70",
-      headerBg: "bg-zinc-500 dark:bg-zinc-600",
-      border: "border-zinc-200 dark:border-zinc-700",
-      hoverBorder: "hover:border-zinc-300 dark:hover:border-zinc-600",
-      text: "text-white dark:text-white",
-      accent: "bg-white/20 text-white dark:bg-zinc-400/30 dark:text-zinc-100",
-      buttonHover: "hover:bg-white/20 dark:hover:bg-white/10",
-    },
-    blue: {
-      bg: "bg-zinc-50 dark:bg-zinc-900/70",
-      headerBg: "bg-blue-500 dark:bg-blue-600",
-      border: "border-blue-300 dark:border-blue-600/50",
-      hoverBorder: "hover:border-blue-500 dark:hover:border-blue-400",
-      text: "text-white dark:text-white",
-      accent: "bg-white/20 text-white dark:bg-blue-400/30 dark:text-blue-100",
-      buttonHover: "hover:bg-white/20 dark:hover:bg-white/10",
-    },
-    amber: {
-      bg: "bg-zinc-50 dark:bg-zinc-900/70",
-      headerBg: "bg-amber-500 dark:bg-amber-600",
-      border: "border-amber-300 dark:border-amber-600/50",
-      hoverBorder: "hover:border-amber-500 dark:hover:border-amber-400",
-      text: "text-white dark:text-white",
-      accent: "bg-white/20 text-white dark:bg-amber-400/30 dark:text-amber-100",
-      buttonHover: "hover:bg-white/20 dark:hover:bg-white/10",
-    },
-    emerald: {
-      bg: "bg-zinc-50 dark:bg-zinc-900/70",
-      headerBg: "bg-emerald-500 dark:bg-emerald-600",
-      border: "border-emerald-300 dark:border-emerald-600/50",
-      hoverBorder: "hover:border-emerald-500 dark:hover:border-emerald-400",
-      text: "text-white dark:text-white",
-      accent: "bg-white/20 text-white dark:bg-emerald-400/30 dark:text-emerald-100",
-      buttonHover: "hover:bg-white/20 dark:hover:bg-white/10",
-    },
-    rose: {
-      bg: "bg-zinc-50 dark:bg-zinc-900/70",
-      headerBg: "bg-rose-500 dark:bg-rose-600",
-      border: "border-rose-300 dark:border-rose-600/50",
-      hoverBorder: "hover:border-rose-500 dark:hover:border-rose-400",
-      text: "text-white dark:text-white",
-      accent: "bg-white/20 text-white dark:bg-rose-400/30 dark:text-rose-100",
-      buttonHover: "hover:bg-white/20 dark:hover:bg-white/10",
-    },
-    purple: {
-      bg: "bg-zinc-50 dark:bg-zinc-900/70",
-      headerBg: "bg-purple-500 dark:bg-purple-600",
-      border: "border-purple-300 dark:border-purple-600/50",
-      hoverBorder: "hover:border-purple-500 dark:hover:border-purple-400",
-      text: "text-white dark:text-white",
-      accent: "bg-white/20 text-white dark:bg-purple-400/30 dark:text-purple-100",
-      buttonHover: "hover:bg-white/20 dark:hover:bg-white/10",
-    },
-    pink: {
-      bg: "bg-zinc-50 dark:bg-zinc-900/70",
-      headerBg: "bg-pink-500 dark:bg-pink-600",
-      border: "border-pink-300 dark:border-pink-600/50",
-      hoverBorder: "hover:border-pink-500 dark:hover:border-pink-400",
-      text: "text-white dark:text-white",
-      accent: "bg-white/20 text-white dark:bg-pink-400/30 dark:text-pink-100",
-      buttonHover: "hover:bg-white/20 dark:hover:bg-white/10",
-    },
-    cyan: {
-      bg: "bg-zinc-50 dark:bg-zinc-900/70",
-      headerBg: "bg-cyan-500 dark:bg-cyan-600",
-      border: "border-cyan-300 dark:border-cyan-600/50",
-      hoverBorder: "hover:border-cyan-500 dark:hover:border-cyan-400",
-      text: "text-white dark:text-white",
-      accent: "bg-white/20 text-white dark:bg-cyan-400/30 dark:text-cyan-100",
-      buttonHover: "hover:bg-white/20 dark:hover:bg-white/10",
-    },
-    indigo: {
-      bg: "bg-zinc-50 dark:bg-zinc-900/70",
-      headerBg: "bg-indigo-500 dark:bg-indigo-600",
-      border: "border-indigo-300 dark:border-indigo-600/50",
-      hoverBorder: "hover:border-indigo-500 dark:hover:border-indigo-400",
-      text: "text-white dark:text-white",
-      accent: "bg-white/20 text-white dark:bg-indigo-400/30 dark:text-indigo-100",
-      buttonHover: "hover:bg-white/20 dark:hover:bg-white/10",
-    }
-  };
-
-  const theme = variants[columnColor];
+  const theme = colorVariants[columnColor];
 
   // Sıralama için DND Kit kullanımı
   const {
@@ -152,7 +56,6 @@ const ColumnContainer = ({
 
   // Sütun başlığını kaydetme
   const saveTitle = () => {
-
     // Başlık güncellenirken rengi de mevcut renkle (columnColor) gönderiyoruz
     if (title.trim() && title !== column.title) {
       updateColumn(column.id, title.trim(), columnColor);
@@ -198,7 +101,6 @@ const ColumnContainer = ({
 
         {/* Üst Satır: drag handle + başlık + butonlar */}
         <div className="relative flex items-center gap-3">
-
           {/* Drag handle */}
           <div
             {...attributes}
@@ -230,7 +132,6 @@ const ColumnContainer = ({
 
           {/* Sağ Butonlar */}
           <div className="flex items-center gap-1.5 shrink-0 opacity-0 group-hover/header:opacity-100 transition-opacity">
-
             {/* Renk Seçici */}
             {!disableColorChange && (
               <div className="relative">
@@ -247,42 +148,11 @@ const ColumnContainer = ({
                   <Palette size={16} className={cn("sm:w-[18px] sm:h-[18px] drop-shadow-sm", theme.text)} />
                 </button>
 
-                {/* Renk Paleti Popup */}
-                {showColorPicker && (
-                  <div className="absolute top-full right-0 mt-2 p-3 bg-white dark:bg-zinc-800 rounded-2xl shadow-xl border border-zinc-200 dark:border-zinc-700 z-50 animate-in fade-in zoom-in-95 duration-200 min-w-[150px]">
-
-                    {/* Ok işareti  */}
-                    <div className="absolute -top-1.5 right-3 w-3 h-3 bg-white dark:bg-zinc-800 border-t border-l border-zinc-200 dark:border-zinc-700 rotate-45"></div>
-
-                    {/* 3x3 Renk ızgarası */}
-                    <div className="grid grid-cols-3 gap-2 relative z-10">
-                      {colorPalette.map((color) => {
-                        const isSelected = columnColor === color.id;
-                        return (
-                          <button
-                            key={color.id}
-                            type="button"
-                            onClick={() => changeColor(color.id)}
-                            className={cn(
-                              "w-8 h-8 rounded-lg transition-all hover:scale-105 active:scale-95 relative shadow-sm",
-                              color.bg,
-                              isSelected && "ring-2 ring-zinc-900 dark:ring-white ring-offset-2 ring-offset-white dark:ring-offset-zinc-800 scale-105 z-10"
-                            )}
-                            title={color.name}
-                          >
-                            {isSelected && (
-                              <div className="absolute inset-0 flex items-center justify-center">
-                                <svg className="w-5 h-5 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                </svg>
-                              </div>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
+                <ColumnColorPicker 
+                  show={showColorPicker}
+                  currentColor={columnColor}
+                  onColorChange={changeColor}
+                />
               </div>
             )}
 

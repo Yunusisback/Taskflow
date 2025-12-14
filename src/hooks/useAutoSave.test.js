@@ -1,6 +1,6 @@
 import { renderHook } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { useAutoSave } from '../../hooks/useAutoSave';
+import { useAutoSave } from './useAutoSave';
 
 describe('useAutoSave Hook', () => {
   beforeEach(() => {

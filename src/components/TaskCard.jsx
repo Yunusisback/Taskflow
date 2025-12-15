@@ -6,240 +6,242 @@ import { cn } from "../lib/utils";
 import { useTaskTheme } from "../hooks/useTaskTheme";
 
 const TaskCard = ({ task, columnTheme, updateTask, deleteTask, moveTask, isOverlay }) => {
-  const [mouseIsOver, setMouseIsOver] = useState(false);
-  const [editMode, setEditMode] = useState(false);
-  const textareaRef = useRef(null);  
-  
-  //  Karakter limiti kontrolü
-  const MAX_CHARS = 500;
-  const remainingChars = MAX_CHARS - (task.content?.length || 0);
-  const isNearLimit = remainingChars < 50;
-  
-  // Son düzenleme tarihi gösterimi
-  const lastEdited = useMemo(() => {
-    if (task.lastEdited) {
-      const date = new Date(task.lastEdited);
-      const now = new Date();
-      const diffMs = now - date;
-      const diffMins = Math.floor(diffMs / 60000);
-      
-      // Zaman farkına göre gösterim
-      if (diffMins < 1) return "Az önce";
-      if (diffMins < 60) return `${diffMins} dk önce`;
-      if (diffMins < 1440) return `${Math.floor(diffMins / 60)} saat önce`;
-      
-      return date.toLocaleDateString('tr-TR', { 
-        day: 'numeric', 
-        month: 'short',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    }
-    return null;
-  }, [task.lastEdited]);
-  
-  const { ringColor, scrollbarColor } = useTaskTheme(columnTheme);
+  const [mouseIsOver, setMouseIsOver] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const textareaRef = useRef(null);  
+  
+  //  Karakter limiti kontrolü
+  const MAX_CHARS = 500;
+  const remainingChars = MAX_CHARS - (task.content?.length || 0);
+  const isNearLimit = remainingChars < 50;
+  
+  // Son düzenleme tarihi gösterimi
+  const lastEdited = useMemo(() => {
+    if (task.lastEdited) {
+      const date = new Date(task.lastEdited);
+      const now = new Date();
+      const diffMs = now - date;
+      const diffMins = Math.floor(diffMs / 60000);
+      
+      // Zaman farkına göre gösterim
+      if (diffMins < 1) return "Az önce";
+      if (diffMins < 60) return `${diffMins} dk önce`;
+      if (diffMins < 1440) return `${Math.floor(diffMins / 60)} saat önce`;
+      
+      return date.toLocaleDateString('tr-TR', { 
+        day: 'numeric', 
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+    return null;
+  }, [task.lastEdited]);
+  
+  const { ringColor, scrollbarColor } = useTaskTheme(columnTheme);
 
-  const {
-    setNodeRef,
-    attributes,
-    listeners,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
-    id: task.id,
-    data: { type: "Task", task },
-    disabled: editMode,
-  });
+  const {
+    setNodeRef,
+    attributes,
+    listeners,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: task.id,
+    data: { type: "Task", task },
+    disabled: editMode,
+  });
 
-  const style = {
-    transition,
-    transform: CSS.Transform.toString(transform),
-  };
+  const style = {
+    transition,
+    transform: CSS.Transform.toString(transform),
+  };
 
-  const toggleEditMode = () => {
-    setEditMode((prev) => !prev);
-    setMouseIsOver(false);
-  };
+  const toggleEditMode = () => {
+    setEditMode((prev) => !prev);
+    setMouseIsOver(false);
+  };
 
-  // Textarea focus yönetimi
-  useEffect(() => {
-    if (editMode && textareaRef.current) {
-      textareaRef.current.focus();
-      const length = textareaRef.current.value.length;
-      textareaRef.current.setSelectionRange(length, length);
-    }
-  }, [editMode]);
+  // Textarea focus yönetimi
+  useEffect(() => {
+    if (editMode && textareaRef.current) {
+      textareaRef.current.focus();
+      const length = textareaRef.current.value.length;
+      textareaRef.current.setSelectionRange(length, length);
+    }
+  }, [editMode]);
 
-  if (isDragging && !isOverlay) {
-    return (
-      <div
-        ref={setNodeRef}
-        style={style}
-        className="opacity-30 bg-black/5 dark:bg-white/5 h-16 sm:h-20 min-h-16 sm:min-h-20 rounded-lg border-2 border-dashed border-zinc-400 dark:border-zinc-600"
-      />
-    );
-  }
+  if (isDragging && !isOverlay) {
+    return (
+      <div
+        ref={setNodeRef}
+        style={style}
+        className="opacity-30 bg-black/5 dark:bg-white/5 h-16 sm:h-20 min-h-16 sm:min-h-20 rounded-lg border-2 border-dashed border-zinc-400 dark:border-zinc-600"
+      />
+    );
+  }
 
-  return (
-    <div
-      ref={setNodeRef}
-      style={isOverlay ? undefined : style}
-      {...attributes}
-      {...listeners}
-      onClick={toggleEditMode}
-      className={cn(
-        "group relative flex flex-col justify-between p-2.5 sm:p-3 min-h-16 sm:min-h-20 rounded-lg border shadow-sm transition-all duration-200 overflow-hidden",
-        "bg-white border-zinc-200", 
-        "dark:bg-zinc-800 dark:border-zinc-700/50",
-        "hover:shadow-md active:shadow-lg",
-        ringColor, 
-        editMode ? "ring-2 ring-inset cursor-text" : "cursor-grab active:cursor-grabbing",
-        isOverlay ? "cursor-grabbing shadow-2xl opacity-100 z-50 ring-2 ring-emerald-500/20" : ""
-      )}
-      onMouseEnter={() => setMouseIsOver(true)}
-      onMouseLeave={() => setMouseIsOver(false)}
-      onTouchStart={() => setMouseIsOver(true)}
-      onTouchEnd={() => setTimeout(() => setMouseIsOver(false), 2000)}
-    >
-      {editMode ? (
-        <div className="relative space-y-2"> 
-          <textarea
-            ref={textareaRef} 
-            className={cn(
-              "h-full w-full resize-none bg-transparent text-sm text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-300 dark:placeholder:text-zinc-600 placeholder:italic focus:outline-none min-h-16",
-              "[&::-webkit-scrollbar]:w-1.5",
-              "[&::-webkit-scrollbar-track]:bg-transparent",
-              "[&::-webkit-scrollbar-thumb]:rounded-full",
-              "[&::-webkit-scrollbar-thumb]:transition-colors",
-              scrollbarColor,
-              "[&::-webkit-scrollbar-thumb]:hover:brightness-90"
-            )}
-            value={task.content}
-            maxLength={MAX_CHARS} 
-            autoFocus
-            placeholder="Not yazın..."
-            onClick={(e) => e.stopPropagation()}
-            onBlur={toggleEditMode}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                toggleEditMode();
-              }
-            }}
-            onChange={(e) => updateTask(task.id, e.target.value)}
-          />
-          
-          {/* Karakter sayacı */}
-          <div className={cn(
-            "flex items-center gap-1.5 text-xs transition-colors",
-            isNearLimit 
-              ? "text-rose-500 dark:text-rose-400" 
-              : "text-zinc-400 dark:text-zinc-500"
-          )}>
-            <Type size={12} />
-            <span className="font-medium">
-              {remainingChars} karakter kaldı
-            </span>
-          </div>
-        </div>
-      ) : (
-        <>
-          {/* Hover ile scrollable metin alanı */}
-          <div className={cn(
-            "flex-1 overflow-y-auto pr-2 -mr-2",
-            "[&::-webkit-scrollbar]:w-1.5",
-            "[&::-webkit-scrollbar-track]:bg-transparent",
-            "[&::-webkit-scrollbar-thumb]:rounded-full",
-            "[&::-webkit-scrollbar-thumb]:transition-colors",
-            scrollbarColor,
-            mouseIsOver ? "opacity-100" : "opacity-0"
-          )}>
-            <p className="text-sm text-zinc-700 dark:text-zinc-200 whitespace-pre-wrap leading-relaxed break-all">
-              {task.content}
-            </p>
-          </div>
+  return (
+    <div
+      ref={setNodeRef}
+      style={isOverlay ? undefined : style}
+      {...attributes}
+      {...listeners}
+      onClick={toggleEditMode}
+      className={cn(
+        "group relative flex flex-col justify-between p-2.5 sm:p-3 min-h-16 sm:min-h-20 rounded-lg border shadow-sm transition-all duration-200 overflow-hidden",
+        "bg-white border-zinc-200", 
+        "dark:bg-zinc-800 dark:border-zinc-700/50",
+        "hover:shadow-md active:shadow-lg",
+        ringColor, 
+        editMode ? "ring-2 ring-inset cursor-text" : "cursor-grab active:cursor-grabbing",
+        isOverlay ? "cursor-grabbing shadow-2xl opacity-100 z-50 ring-2 ring-emerald-500/20" : ""
+      )}
+      onMouseEnter={() => setMouseIsOver(true)}
+      onMouseLeave={() => setMouseIsOver(false)}
+      onTouchStart={() => setMouseIsOver(true)}
+      onTouchEnd={() => setTimeout(() => setMouseIsOver(false), 2000)}
+    >
+      {editMode ? (
+        <div className="relative space-y-2"> 
+          <textarea
+            ref={textareaRef} 
+            className={cn(
+              "h-full w-full resize-none bg-transparent text-sm text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-300 dark:placeholder:text-zinc-600 placeholder:italic focus:outline-none min-h-16",
+              "[&::-webkit-scrollbar]:w-1.5",
+              "[&::-webkit-scrollbar-track]:bg-transparent",
+              "[&::-webkit-scrollbar-thumb]:rounded-full",
+              "[&::-webkit-scrollbar-thumb]:transition-colors",
+              scrollbarColor,
+              "[&::-webkit-scrollbar-thumb]:hover:brightness-90"
+            )}
+            value={task.content}
+            maxLength={MAX_CHARS} 
+            autoFocus
+            placeholder="Not yazın..."
+            onClick={(e) => e.stopPropagation()}
+            onBlur={toggleEditMode}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                toggleEditMode();
+              }
+            }}
+            onChange={(e) => updateTask(task.id, e.target.value)}
+          />
+          
+          {/* Karakter sayacı */}
+          <div className={cn(
+            "flex items-center gap-1.5 text-xs transition-colors",
+            isNearLimit 
+              ? "text-rose-500 dark:text-rose-400" 
+              : "text-zinc-400 dark:text-zinc-500"
+          )}>
+            <Type size={12} />
+            <span className="font-medium">
+              {remainingChars} karakter kaldı
+            </span>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Hover ile scrollable metin alanı */}
+          <div className={cn(
+            "flex-1 overflow-y-auto pr-2 -mr-2",
+            "[&::-webkit-scrollbar]:w-1.5",
+            "[&::-webkit-scrollbar-track]:bg-transparent",
+            "[&::-webkit-scrollbar-thumb]:rounded-full",
+            "[&::-webkit-scrollbar-thumb]:transition-colors",
+            scrollbarColor,          mouseIsOver ? "opacity-100" : "opacity-0"
+          )}>
+            <p className="text-sm text-zinc-700 dark:text-zinc-200 whitespace-pre-wrap leading-relaxed break-all">
+              {task.content}
+            </p>
+          </div>
 
-          {/* Statik metin alanı */}
-          <div className={cn(
-            "absolute inset-x-2.5 top-2.5 text-sm text-zinc-700 dark:text-zinc-200 pointer-events-none",
-            mouseIsOver ? "opacity-0" : "opacity-100"
-          )}>
-            <p className="whitespace-pre-wrap leading-relaxed break-all line-clamp-2">
-              {task.content}
-            </p>
-            
-            {/*Son düzenleme tarihi  */}
-            {lastEdited && (
-              <div className="flex items-center gap-1 text-[10px] text-zinc-400 dark:text-zinc-500 mt-1.5">
-                <Calendar size={10} />
-                <span>{lastEdited}</span>
-              </div>
-            )}
-          </div>
-          
-          {/* Görev İşlem Butonları */}
-          <div className={cn(
-            "flex items-center justify-between mt-auto pt-1.5 transition-opacity",
-            mouseIsOver || isOverlay ? "opacity-100" : "opacity-0"
-          )}>
-             <div className="text-zinc-300 dark:text-zinc-600">
-                <GripVertical size={14} />
-             </div>
-             
-             <div className="flex items-center gap-1">
-               {task.columnId === 'todo' && (
-                 <>
-                   <button
-                     onClick={(e) => {
-                       e.stopPropagation();
-                       moveTask(task.id, 'doing');
-                     }}
-                     className="group/btn relative p-1.5 rounded hover:bg-amber-50 dark:hover:bg-amber-900/20 text-zinc-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors active:scale-95"
-                     title="İşleniyor'a taşı"
-                   >
-                     <ArrowRight size={14} />
-                     <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-zinc-800 dark:bg-zinc-700 text-white text-xs rounded opacity-0 group-hover/btn:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
-                       İşleniyor
-                     </span>
-                   </button>
-                   <button
-                     onClick={(e) => {
-                       e.stopPropagation();
-                       moveTask(task.id, 'done');
-                     }}
-                     className="group/btn relative p-1.5 rounded hover:bg-emerald-50 dark:hover:bg-emerald-900/20 text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors active:scale-95"
-                     title="Tamamlandı'ya taşı"
-                   >
-                     <Check size={14} />
-                     <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-zinc-800 dark:bg-zinc-700 text-white text-xs rounded opacity-0 group-hover/btn:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
-                       Tamamlandı
-                     </span>
-                   </button>
-                 </>
-               )}
-               
-               {/* Sil Butonu */}
-               <button
-                 onClick={(e) => {
-                   e.stopPropagation(); 
-                   deleteTask(task.id);
-                 }}
-                 className="group/btn relative p-1.5 rounded hover:bg-rose-50 dark:hover:bg-rose-900/20 text-zinc-400 hover:text-rose-500 transition-colors active:scale-95"
-                 title="Sil"
-               >
-                 <Trash2 size={14} />
-                 <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-zinc-800 dark:bg-zinc-700 text-white text-xs rounded opacity-0 group-hover/btn:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
-                   Sil
-                 </span>
-               </button>
-             </div>
-          </div>
-        </>
-      )}
-    </div>
-  );
+          {/* Statik metin alanı */}
+          <div className={cn(
+            "absolute inset-x-2.5 top-2.5 text-sm text-zinc-700 dark:text-zinc-200 pointer-events-none",
+            mouseIsOver ? "opacity-0" : "opacity-100"
+          )}>
+            <p className="whitespace-pre-wrap leading-relaxed break-all line-clamp-2">
+              {task.content}
+            </p>
+            
+            {/*Son düzenleme tarihi  */}
+            {lastEdited && (
+              <div className="flex items-center gap-1 text-[10px] text-zinc-400 dark:text-zinc-500 mt-1.5">
+                <Calendar size={10} />
+                <span>{lastEdited}</span>
+              </div>
+            )}
+          </div>
+          
+          {/* Görev İşlem Butonları */}
+          <div className={cn(
+            "flex items-center justify-between mt-auto pt-1.5 transition-opacity",
+            mouseIsOver || isOverlay ? "opacity-100" : "opacity-0"
+          )}>
+             <div className="text-zinc-300 dark:text-zinc-600">
+                <GripVertical size={14} />
+             </div>
+             
+             <div className="flex items-center gap-1">
+           
+                {task.columnId === 'todo' && (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation(); 
+                            moveTask(task.id, 'doing');
+                        }}
+                        className="group/btn relative p-1.5 rounded hover:bg-amber-50 dark:hover:bg-amber-900/20 text-zinc-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors active:scale-95"
+                        title="İşleniyor'a taşı"
+                    >
+                        <ArrowRight size={14} />
+                        <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-zinc-800 dark:bg-zinc-700 text-white text-xs rounded opacity-0 group-hover/btn:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
+                            İşleniyor
+                        </span>
+                    </button>
+                )}
+
+                {/* Tamamlandıya Taşı Butonu  */}
+                {task.columnId !== 'done' && (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation(); 
+                            moveTask(task.id, 'done');
+                        }}
+                        className="group/btn relative p-1.5 rounded hover:bg-emerald-50 dark:hover:bg-emerald-900/20 text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors active:scale-95"
+                        title="Tamamlandı'ya taşı"
+                    >
+                        <Check size={14} />
+                        <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-zinc-800 dark:bg-zinc-700 text-white text-xs rounded opacity-0 group-hover/btn:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
+                            Tamamlandı
+                        </span>
+                    </button>
+                )}
+               
+               {/* Sil Butonu */}
+               <button
+                 onClick={(e) => {
+                   e.stopPropagation(); 
+                   deleteTask(task.id);
+                 }}
+                 className="group/btn relative p-1.5 rounded hover:bg-rose-50 dark:hover:bg-rose-900/20 text-zinc-400 hover:text-rose-500 transition-colors active:scale-95"
+                 title="Sil"
+               >
+                 <Trash2 size={14} />
+                 <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-zinc-800 dark:bg-zinc-700 text-white text-xs rounded opacity-0 group-hover/btn:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
+                   Sil
+                 </span>
+               </button>
+             </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
 };
 
 export default memo(TaskCard);

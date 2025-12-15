@@ -184,7 +184,7 @@ const ColumnContainer = ({
         {/* Alt Satır*/}
         <div className="relative flex items-center gap-2">
           <div className={cn(
-            "flex items-center justify-center px-3 py-1 text-sm font-bold rounded-full shadow-sm backdrop-blur-sm ring-1 ring-white/20",
+            "flex items-center justify-center px-3 py-1 ml-7 text-sm font-bold rounded-full shadow-sm backdrop-blur-sm ring-1 ring-white/20",
             theme.accent
           )}>
             {tasks.length} görev
